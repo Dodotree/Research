@@ -1,0 +1,16 @@
+#index:
+#    path: /
+#    controller: App\Controller\DefaultController::index
+
+protein_admin:
+    resource: "@ProteinAdminBundle/Resources/config/routing.yml"
+    prefix:   /admin/
+
+protein_user:
+    resource: "@ProteinUserBundle/Resources/config/routing.yml"
+    prefix:   /
+
+protein_core:
+    resource: "@ProteinCoreBundle/Resources/config/routing.yml"
+    prefix:   /
+

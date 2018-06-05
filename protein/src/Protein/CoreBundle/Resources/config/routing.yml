@@ -1,0 +1,50 @@
+protein_core_home:
+    path:     /
+    defaults: { _controller: ProteinCoreBundle:Landing:landing }
+
+protein_core_calculate:
+    path:     /calculate
+    defaults: { _controller: ProteinCoreBundle:Landing:calculate }
+
+protein_core_index_file:
+    path:     /index
+    defaults: { _controller: ProteinCoreBundle:Landing:index }
+
+protein_core_fasta_file:
+    path:     /fasta
+    defaults: { _controller: ProteinCoreBundle:Landing:fasta }
+
+protein_core_pdb_file:
+    path:     /pdbfile
+    defaults: { _controller: ProteinCoreBundle:Landing:pdbfile }
+
+protein_core_api:
+    path:     /api
+    defaults: { _controller: ProteinCoreBundle:Api:index }
+
+protein_core_api_init:
+    path:     /api/init
+    defaults: { _controller: ProteinCoreBundle:Api:default }
+
+protein_core_about:
+    path:     /about
+    defaults: { _controller: ProteinCoreBundle:Static:about }
+
+protein_core_page:
+    path:     /{pageslug}
+    defaults: { _controller: ProteinCoreBundle:Landing:landing }
+    requirements:
+        pageslug: \w+
+protein_core_page_slash:
+    path:     /{pageslug}/
+    defaults: { _controller: ProteinCoreBundle:Landing:landing }
+    requirements:
+        pageslug: \w+
+
+protein_core_page_subpage:
+    path:     /{pageslug}/{_subpage}
+    defaults: { _controller: ProteinCoreBundle:Landing:landing }
+    requirements:
+        pageslug: \w+
+        _subpage: \d+
+

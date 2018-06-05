@@ -1,0 +1,4 @@
+protein_admin_admin:
+    path:     /admin
+    defaults: { _controller: ProteinAdminBundle:Admin:admin }
+

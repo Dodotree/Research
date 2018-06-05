@@ -1,0 +1,24 @@
+protein_core_landing:
+    path:     /landing
+    defaults: { _controller: ProteinCoreBundle:Landing:landing }
+protein_user_login:
+    path:     /landing/login
+    defaults: { _controller: ProteinUserBundle:Security:login }
+protein_user_register:
+    path:     /landing/register
+    defaults: { _controller: ProteinUserBundle:Registration:register }
+
+
+protein_api_user_login:
+    path:     /api_login
+    defaults: { _controller: ProteinUserBundle:Security:apilogin }
+
+protein_user_settings:
+    path:     /settings
+    defaults: { _controller: ProteinUserBundle:Home:settings }
+
+protein_user_logout:
+    path:     /logout
+    defaults: { _controller: ProteinUserBundle:Security:logout }
+
+

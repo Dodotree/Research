@@ -1,0 +1,3 @@
+controllers:
+    resource: ../../src/Protein/CoreBundle/Controller/
+    type: annotation

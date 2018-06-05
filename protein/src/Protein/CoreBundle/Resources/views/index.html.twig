@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Judo Heroes - A Universal JavaScript demo application with React</title>
+    <link rel="stylesheet" href="{{ absolute_url(asset('css/style.css')) }}">
+    <link rel="stylesheet" href="{{ absolute_url(asset('bundles/proteincore/bootstrap/css/bootstrap.css')) }}">
+    <link rel="stylesheet" href="{{ absolute_url(asset('bundles/proteincore/dropzone/basic.css')) }}">
+    <link rel="stylesheet" href="{{ absolute_url(asset('bundles/proteincore/tableexport/css/tableexport.css')) }}">
+</head>
+
+<body>
+{% block body %}
+    <div id="main"></div>
+    <script id="preload">
+      window.__PRELOADED_STATE__ = "{#{ 'aaa'|raw }#}";
+      window.__PAGESLUG__ = "{{pageslug}}";
+    </script>
+
+    <div class="container-fluid">
+
+      <h2 class="mt-5 ml-5 mr-5">High-Throughput Quantification of Hydrogen Bonds and Salt Bridges in Proteins</h2>
+
+      <div class="mt-4 ml-5 mr-5 alert alert-primary">
+        <p><b>This is software to automatically calculate the total number of hydrogen bonds and salt bridges in large numbers of proteins. The software takes either UniProt .fasta or protein database .pdb files as input.</b></p>
+        <p><b>If starting with UniProt .fasta files:</b></p>
+        <ul>
+            <li>Upload a .fasta file (downloaded from the UniProt database (<a href="http://www.uniprot.org/">http://www.uniprot.org/</a>)</li>
+            <li>Once files have been uploaded, chose “Calculate using .fasta” button to calculate hydrogen bonds and salt bridges for each protein.</li>
+                <ul>
+                    <li>this will first use SWISS MODEL algorithm (<a href="https://swissmodel.expasy.org/interactive">https://swissmodel.expasy.org/interactive</a>) to generate a protein database (.pdb) file for each protein sequence in the .fasta file</li>
+                    <li>species, protein name, gene name, length, and QMEAN values are extracted from the resulting .pdb file</li>
+                    <li>modeling is restricted to 2000 protein queries per 24 hours. A bar will show progress and the results table will be updated after each protein has finished.</li>
+note that .pdb files will not be created for every protein on the input list, only proteins for which SWISS MODEL has a suitable template in their database</li>
+                    <li>QMEAN scores below -4.0 are an indication of a low quality model</li>
+                    <li>hydrogen bond prediction uses HBOND algorithm</li>
+                    <li>salt bridge prediction uses ESBRI algorithm<li>
+                </ul>
+            <li>Data can be downloaded as .TXT, .CSV, or .XLSX using “Download” button</li>
+        </ul>
+    <p><b>If starting with .pdb files:</b></p>
+        <ul>
+            <li>Drag or upload multiple .pdb files. Click to begin calculating hydrogen bonds and salt bridges for each file.</li> 
+                <ul>
+                    <li>in cases where multiple .pdb files have been generated for the same protein (determined by duplicate UniProt IDs), only the model with the highest QMEAN score will be added to the results table.</li> 
+                    <li>for this reason, the number of input .pdb files may not match the number of results (i.e rows) in the data table.</li>
+                    <li>if SWISS MODEL bulk modeling approach was used, an index file can be uploaded which will cross-reference protein and gene names if present in the index.</li>
+                </ul>
+            <li>Data can be downloaded as .TXT, .CSV, or .XLSX using “Download” buttons.</li>
+      </div>
+
+      <div class="ml-5 mr-5">
+        <table class="table dropzone-table">
+          <tr>
+            <td scope="row" class="col-4"><div class="mydropzone" id="index-dropzone"></div></td>
+            <td scope="row" class="col-4"><div class="mydropzone" id="pdb-dropzone"></div></td>
+            <td scope="row" class="col-4"><div class="mydropzone" id="fasta-dropzone"></div></td>
+          </tr>
+          <tr>
+            <td>
+              SWISS INDEX table count {{index_count}}, process ongoing: {{ parsing_on ? 'Yes' : 'No' }}
+            </td>
+            <td>
+              <button id="hbonds-bridges-start" class="btn btn-sm btn-outline-secondary">Get BONDs and SaltBridges</button>
+              <button id="hbonds-bridges-stop" class="btn btn-sm btn-outline-secondary">Stop</button>
+              <span id="hbonds-process-span">
+                Process {{ hbonds_on ? 'On' : 'Off' }}
+                {{ hbonds_on ? hbonds_progress : '' }}
+              </span>
+            </td>
+            <td>
+              <button id="models-start" class="btn btn-sm btn-outline-secondary">Request models</button>
+              <button id="models-stop" class="btn btn-sm btn-outline-secondary">Stop</button>
+              <span id="models-process-span">
+                Process {{ models_on ? 'On' : 'Off' }}
+                {{ models_on ? models_progress : '' }}
+              </span>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="ml-5 mr-5">
+        <h4>Proteins: {{ proteins|length }}</h4>
+        <table class="table" id="proteins-table">
+          <thead>
+            <tr>
+              <th>UniProt</th>
+              <th>Name</th>
+              <th>Gene</th>
+              <th>Species</th>
+              <th>Len</th>
+              <th>Qmean</th>
+              <th>Qmean norm</th>
+              <th>Bonds</th>
+              <th>Bridges</th>
+              <th>File name</th>
+              <!-- th>Index Reference</th -->
+            </tr>
+          </thead>
+          <tbody>
+            {% for protein in proteins %}
+            <tr>
+              <td>{{ protein.id }}</td>
+              <td>{{ protein.name }}</td>
+              <td>{{ protein.gene }}</td>
+              <td>{{ protein.species }}</td>
+              <td>{{ protein.len }}</td>
+              <td>{{ protein.qmean }}</td>
+              <td>{{ protein.qmean_norm }}</td>
+              <td>{{ protein.bonds }}</td>
+              <td>{{ protein.bridges }}</td>
+              <td>{{ protein.filename }}</td>
+              <!-- td>{{ protein.record }}</td -->
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="ml-5 mr-5">
+        <h4>File uploads: {{ uploads|length }}</h4>
+        <table class="table uploads-table">
+          <thead>
+            <tr>
+              <th>UniProt</th>
+              <th>File Name</th>
+              <th>Index</th>
+              <th>Qmean</th>
+              <th>Attempts</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for upload in uploads %}
+            <tr>
+              <td>{{ upload.UniProt }}</td>
+              <td>{{ upload.filename }}</td>
+              <td>{{ upload.record }}</td>
+              <td>{{ upload.qmean }}</td>
+              <td>{{ upload.attempts }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ absolute_url(asset('bundles/proteincore/bootstrap/jquery.js')) }}" type="text/javascript"></script>
+    <script src="{{ absolute_url(asset('bundles/proteincore/bootstrap/js/bootstrap.js')) }}" type="text/javascript"></script>
+    <script src="{{ absolute_url(asset('bundles/proteincore/dropzone/dropzone.js')) }}" type="text/javascript"></script>
+    <script src="{{ absolute_url(asset('bundles/proteincore/tableexport/js/xlsx.min.js')) }}" type="text/javascript"></script>
+    <script src="{{ absolute_url(asset('bundles/proteincore/tableexport/js/FileSaver.js')) }}" type="text/javascript"></script>
+    <script src="{{ absolute_url(asset('bundles/proteincore/tableexport/js/tableexport.js')) }}" type="text/javascript"></script>
+    <script src="{{ absolute_url(asset('bundles/proteincore/js/index.js')) }}" type="text/javascript"></script>
+{% endblock %}
+
+</body>
+</html>

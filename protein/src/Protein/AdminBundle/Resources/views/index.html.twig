@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Judo Heroes - A Universal JavaScript demo application with React</title>
+    <link rel="stylesheet" href="{{ absolute_url(asset('css/style.css')) }}">
+</head>
+
+
+{% block body %}
+    <div id="main"></div>
+    <script id="preload">
+      // WARNING: See the following for security issues around embedding JSON in HTML:
+      // http://redux.js.org/docs/recipes/ServerRendering.html#security-considerations
+    </script>
+{% endblock %}
+
+{% block javascripts %}
+{% endblock %}
+
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+   <meta charset=utf-8>
+   <meta name=viewport content="width=device-width,initial-scale=1">
+   <title>Protein login</title>
+   <link href="http://ec2-13-56-12-150.us-west-1.compute.amazonaws.com/bundles/proteinuser/mobile/dist/static/css/app.css" rel=stylesheet>
+   <script id="preload">
+      // WARNING: See the following for security issues around embedding JSON in HTML:
+      // http://redux.js.org/docs/recipes/ServerRendering.html#security-considerations
+      window.__PRELOADED_STATE__ = '{{ preload|json_encode|raw }}';
+   </script>
+  </head>
+  <body>
+
+    <div id=app></div>
+
+{% if error %}
+    <div>{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+{% endif %}
+
+
+<script type=text/javascript src="http://ec2-13-56-12-150.us-west-1.compute.amazonaws.com/bundles/proteinuser/mobile/dist/static/js/manifest.js"></script>
+<script type=text/javascript src="http://ec2-13-56-12-150.us-west-1.compute.amazonaws.com/bundles/proteinuser/mobile/dist/static/js/vendor.js"></script>
+<script type=text/javascript src="http://ec2-13-56-12-150.us-west-1.compute.amazonaws.com/bundles/proteinuser/mobile/dist/static/js/app.js"></script>
+
+</body>
+</html>

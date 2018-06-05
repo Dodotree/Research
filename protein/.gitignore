@@ -1,0 +1,17 @@
+
+###> symfony/framework-bundle ###
+/.env
+/%PUBLIC_DIR%/bundles/
+/%VAR_DIR%/
+/vendor/
+/var/
+###< symfony/framework-bundle ###
+
+/public/uploads/
+
+###> symfony/webpack-encore-pack ###
+/node_modules/
+/%PUBLIC_DIR%/build/
+npm-debug.log
+yarn-error.log
+###< symfony/webpack-encore-pack ###

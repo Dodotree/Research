@@ -1,0 +1,10 @@
+{{ form_start(form, {'action': path('protein_user_register'), 'attr':{'id': 'registration-form'}}) }}
+    <a href="#" id="register-more">More</a>
+    <a href="#" id="register-less">Less</a>
+    {{ form_row(form.username) }}
+    {{ form_row(form.email) }}
+    {{ form_row(form.plainPassword.first) }}
+    {{ form_row(form.plainPassword.second) }}
+
+    <button id="user_registration_submit" type="submit">{{'register'|trans}}!</button>
+{{ form_end(form) }}

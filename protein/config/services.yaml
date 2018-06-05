@@ -1,0 +1,48 @@
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
+parameters:
+    locale: 'en'
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        public: false       # Allows optimizing the container by removing unused services; this also means
+                            # fetching services directly from the container via $container->get() won't work.
+                            # The best practice is to be explicit about your dependencies anyway.
+    logout_handler:
+        autowire: true
+        class: Protein\UserBundle\Handler\LogoutSuccessHandler 
+
+    api_functions:
+        public: true
+        class: Protein\CoreBundle\Functions\ApiFunctions
+        arguments: ['@doctrine.orm.entity_manager', '@service_container']
+
+
+    core_commands:
+        public: true
+        class: Protein\CoreBundle\Command\ParseCommand
+        tags:
+            - { name: 'console.command', command: 'app:parse-index' }
+
+    fetch_commands:
+        public: true
+        class: Protein\CoreBundle\Command\HBondsSaltBridgesCommand
+        tags:
+            - { name: 'console.command', command: 'app:hbonds-bridges' }
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    #Protein\:
+    #    resource: '../src/Protein/*'
+    #    exclude: '../src/Protein/{Entity,Migrations,Tests}'
+
+    # controllers are imported separately to make sure services can be injected
+    # as action arguments even if you don't extend any base controller class
+    #Protein\Controller\:
+    #    resource: '../src/Protein/Controller'
+    #    tags: ['controller.service_arguments']
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones
