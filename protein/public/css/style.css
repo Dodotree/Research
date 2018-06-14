@@ -4,7 +4,7 @@
     color: #007bff;
     border-radius: 0.2rem;
 }
-table.dropzone-table td>div{
+table.dropzone-table .dropzones-row td>div{
     min-height: 240px;
     text-align: center;
 }
@@ -39,3 +39,74 @@ table.dropzone-table td>div{
     margin-right: 0.2rem;
     margin-left: 0.2rem;
 }
+
+
+/* flash card */
+.flash-card.danger {
+  background-color: #d91636;
+}
+.flash-card.success {
+  background-color: #0753b8;
+}
+.flash-card.danger i.icon3-flash:before{
+    content: "\f06a"; /* icon3-exclamation-circle  */
+}
+.flash-card.success i.icon3-flash:before{
+    content: "\f058"; /* icon3-check-circle  */
+}
+
+.flash-box{
+   position: fixed;
+   top: 0;
+   right: 2rem;
+   z-index: 30000000;
+}
+.flash-card{
+   position: relative;
+   top: 0;
+   left: 0;
+   border-radius: 0.25rem;
+   border: 1px solid rgba(0, 0, 0, 0.15);
+   box-shadow: 0.75rem 1rem 0 rgba(0, 0, 0, 0.15);
+   width: 16rem;
+   overflow: hidden;
+   margin-top: 1rem;
+   opacity: 1;
+
+    -moz-transition: all 0.5s ease 0s;
+    -o-transition: all 0.5s ease 0s;
+    -webkit-transition: all 0.5s ease 0s;
+    transition: all 0.5s ease 0s; 
+}
+
+.flash-card-icon{
+   border-radius: 0.25rem 0.25rem 0 0;
+   text-align: center;
+   color: #ffffff;
+   font-size: 5rem;
+
+   line-height: 0.5rem;
+   height: 0.5rem;
+   min-height: 0.5rem;
+}
+.flash-card-text{
+   border-radius: 0 0 0.25rem 0.25rem;
+   background-color: #F7F7F7;
+   font-size: 1rem;
+   line-height: 1.13rem;
+   padding: 1.6rem;
+}
+.flash-card i.icon3-flash,
+.flash-card i.icon3-flash:before{
+   line-height: 9rem;
+   display: inline-block;
+}
+.way-below{
+    top: 20rem;
+    opacity: 0;
+}
+.way-to-the-right{
+    left: 20rem;
+    opacity: 0;
+}
+/* end flash card */

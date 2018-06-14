@@ -9,5 +9,9 @@
         "dev": "encore dev",
         "watch": "encore dev --watch",
         "build": "encore production"
+    },
+    "dependencies": {
+        "websocket": "^1.0.26",
+        "ws": "^5.2.0"
     }
 }
