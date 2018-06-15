@@ -40,6 +40,11 @@ class Page
      */
     protected $proteins;
 
+    /**
+     * @ORM\ManyToMany(targetEntity="Amino", mappedBy="pages", orphanRemoval=true, cascade={"persist"}, indexBy="id")
+     * @ORM\OrderBy({"id" = "ASC"})
+     */
+    protected $aminoacids;
 
     /**
      * Constructor
@@ -47,6 +52,7 @@ class Page
     public function __construct()
     {
         $this->proteins = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->aminoacids = new \Doctrine\Common\Collections\ArrayCollection();
         $this->uploads = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
@@ -163,5 +169,41 @@ class Page
     public function getProteins()
     {
         return $this->proteins;
+    }
+
+    /**
+     * Add aminoacid.
+     *
+     * @param \Protein\CoreBundle\Entity\Amino $aminoacid
+     *
+     * @return Page
+     */
+    public function addAminoacid(\Protein\CoreBundle\Entity\Amino $aminoacid)
+    {
+        $this->aminoacids[] = $aminoacid;
+
+        return $this;
+    }
+
+    /**
+     * Remove aminoacid.
+     *
+     * @param \Protein\CoreBundle\Entity\Amino $aminoacid
+     *
+     * @return boolean TRUE if this collection contained the specified element, FALSE otherwise.
+     */
+    public function removeAminoacid(\Protein\CoreBundle\Entity\Amino $aminoacid)
+    {
+        return $this->aminoacids->removeElement($aminoacid);
+    }
+
+    /**
+     * Get aminoacids.
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getAminoacids()
+    {
+        return $this->aminoacids;
     }
 }

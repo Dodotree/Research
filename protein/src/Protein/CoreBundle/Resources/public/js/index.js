@@ -10,6 +10,7 @@ var Page = {
         Page.initDropzone("#index-dropzone", 'index', "Drop INDEX file here", "INDEX", {});
         Page.initDropzone("#pdb-dropzone", 'pdbfile', "Drop PDB file here", "PDB", {});
         Page.initDropzone("#fasta-dropzone", 'fasta', "Drop .fasta file here", "FASTA", {});
+        Page.initDropzone("#amino-dropzone", 'amino', "Drop .fasta for amino acid count", "AMINO", {});
 
         TableExport(document.getElementById("proteins-table"), {
             headers: false, // (Boolean), display table headers (th or td elements) in the <thead>, (default: true)
@@ -28,11 +29,13 @@ var Page = {
 
         $('#hbonds-bridges-start').click(function(e){
             e.preventDefault();
-            $.post('calculate', 'page=' + Page.slug + '&start=1');
+            $.post('calculate', 'pageslug=' + Page.slug + '&start=1')
+                .done(function(reply){ flashCard.add('success', JSON.stringify(reply)); });
         });
         $('#hbonds-bridges-stop').click(function(e){
             e.preventDefault();
-            $.post('calculate', 'page=' + Page.slug + '&stop=1');
+            $.post('calculate', 'pageslug=' + Page.slug + '&stop=1')
+                .done(function(reply){ flashCard.add('success', JSON.stringify(reply)); });
         });
     },
 
@@ -43,8 +46,7 @@ var Page = {
                     chunking: true,
                     chunkSize: 1*1024*1024,
                     forceChunking: false,
-                    parallelChunkUploads: true,
-                    parallelChunkUploads: true,
+                    parallelChunkUploads: false,
                     retryChunks: true,
                     retryChunksLimit: 3,
                     chunksUploaded: function(big_file, done_func){

@@ -295,7 +295,20 @@ class ApiFunctions
                     $chunks_res['name'] = $filename;
                     return $chunks_res;
                 }
-                return array('final'=>true, 'path'=>$file['tmp_name'], 'name'=>$filename);
+
+                # if not from chunks, move file
+                $rel_path = "uploads/whole_from_chunks/";
+                $info = pathinfo($filename);
+                $extension = isset($info['extension'])? '.'.strtolower($info['extension']) : '';
+                $filenameInf = $info['filename'];
+
+                $saveName = $this->getNextAvailableFilename( $rel_path, $filenameInf, $extension, $errors );
+                if( $saveName and !rename($tmp_file_path, "$rel_path$saveName$extension") ){
+                    $errors[] = "Not able to move file to uploads/pdb folder";
+                    continue;
+                }
+                $file_path = "$rel_path$saveName$extension";
+                return array('final'=>true, 'path'=>$file_path, 'name'=>$filename);
              }
         }
     return false;

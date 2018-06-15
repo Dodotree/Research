@@ -14,6 +14,23 @@ protein_core_fasta_file:
     path:     /fasta
     defaults: { _controller: ProteinCoreBundle:Landing:fasta }
 
+protein_core_aminotable:
+    path:     /{pageslug}/aminotable/
+    defaults: { _controller: ProteinCoreBundle:Landing:aminotable }
+    requirements:
+        pageslug: \w+
+
+protein_core_aminotable_subpage:
+    path:     /{pageslug}/aminotable/{_subpage}
+    defaults: { _controller: ProteinCoreBundle:Landing:aminotable }
+    requirements:
+        pageslug: \w+
+        _subpage: \d+
+
+protein_core_amino_file:
+    path:     /amino
+    defaults: { _controller: ProteinCoreBundle:Landing:amino }
+
 protein_core_pdb_file:
     path:     /pdbfile
     defaults: { _controller: ProteinCoreBundle:Landing:pdbfile }

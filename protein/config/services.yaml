@@ -32,6 +32,13 @@ services:
         class: Protein\CoreBundle\Command\HBondsSaltBridgesCommand
         tags:
             - { name: 'console.command', command: 'app:hbonds-bridges' }
+
+    amino_commands:
+        public: true
+        class: Protein\CoreBundle\Command\AminoCommand
+        tags:
+            - { name: 'console.command', command: 'app:amino' }
+
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
     #Protein\:

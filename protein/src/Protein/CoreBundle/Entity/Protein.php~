@@ -108,6 +108,8 @@ class Protein
             'bonds' => $this->bonds,
             'bridges' => $this->bridges,
             'species' => ($this->species) ? $this->species->getName() : 'unknown',
+            'filename'=>$this->filename,
+            'record'=>($this->getIndexRecord())? $this->getIndexRecord()->getFilename(): null,
         );
     }
 

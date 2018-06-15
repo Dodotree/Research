@@ -66,6 +66,18 @@ class Upload
      */
     protected $createdAt;
 
+
+    public function serializeArray()
+    {
+        return array(
+            'UniProt' => $this->UniProt,
+            'filename' => $this->filename,
+            'record' => ($this->index_record)? $this->index_record->getFilename(): null,
+            'qmean' => $this->qmean,
+            'attempts' => $this->attempts,
+        );
+    }
+
     /**
      * Hook on pre-persist operations
      * @ORM\PrePersist()

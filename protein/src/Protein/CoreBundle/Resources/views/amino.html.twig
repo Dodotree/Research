@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Judo Heroes - A Universal JavaScript demo application with React</title>
+    <link rel="stylesheet" href="{{ absolute_url(asset('css/style.css')) }}">
+    <link rel="stylesheet" href="{{ absolute_url(asset('bundles/proteincore/bootstrap/css/bootstrap.css')) }}">
+    <link rel="stylesheet" href="{{ absolute_url(asset('bundles/proteincore/dropzone/basic.css')) }}">
+    <link rel="stylesheet" href="{{ absolute_url(asset('bundles/proteincore/tableexport/css/tableexport.css')) }}">
+</head>
+
+<body>
+{% block body %}
+    <div id="main"></div>
+    <script id="preload">
+      window.__PRELOADED_STATE__ = "{#{ 'aaa'|raw }#}";
+      window.__PAGESLUG__ = "{{pageslug}}";
+    </script>
+
+    <div class="container-fluid">
+
+      <div class="ml-5 mr-5">
+        <h4>Protein Amino Acids: {{ proteins|length }}</h4>
+        <table class="table" id="proteins-table">
+          <thead>
+            <tr>
+              {% for k, v in proteins[0] %}
+              <td>{{ k }}</td>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for protein in proteins %}
+            <tr>
+              {% for k, v in protein %}
+              <td>{{ (v)? v : 0 }}</td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <div class="flash-box"></div>
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ absolute_url(asset('bundles/proteincore/bootstrap/jquery.js')) }}" type="text/javascript"></script>
+    <script src="{{ absolute_url(asset('bundles/proteincore/bootstrap/js/bootstrap.js')) }}" type="text/javascript"></script>
+    <script src="{{ absolute_url(asset('bundles/proteincore/dropzone/dropzone.js')) }}" type="text/javascript"></script>
+    <script src="{{ absolute_url(asset('bundles/proteincore/tableexport/js/xlsx.min.js')) }}" type="text/javascript"></script>
+    <script src="{{ absolute_url(asset('bundles/proteincore/tableexport/js/FileSaver.js')) }}" type="text/javascript"></script>
+    <script src="{{ absolute_url(asset('bundles/proteincore/tableexport/js/tableexport.js')) }}" type="text/javascript"></script>
+    <script src="{{ absolute_url(asset('bundles/proteincore/js/index.js')) }}" type="text/javascript"></script>
+{% endblock %}
+
+</body>
+</html>

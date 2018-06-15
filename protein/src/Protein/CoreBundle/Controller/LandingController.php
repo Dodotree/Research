@@ -20,11 +20,6 @@ class LandingController extends Controller
             return $this->redirect($this->generateUrl('protein_core_page', ['pageslug'=>$page->getId()]));
         }
 
-        $ind_repo = $em->getRepository('Core:Index');
-        $qb = $ind_repo->createQueryBuilder("fi");
-        $qb->select("count(fi)");
-        $count = $qb->getQuery()->getSingleScalarResult();
-
         $subpage_ind = ($_subpage != '') ? $_subpage : 1;
         $per_page = 1000;
         list($proteins, $pagination) = $this->get('api_functions')->getEntityPagination(
@@ -45,16 +40,26 @@ class LandingController extends Controller
 
         exec( "ps -ax|grep 'app:parse-index'|grep -v grep", $parsing_processes );
         $parsing_on = ( count($parsing_processes)> 0 );
+        $ind_repo = $em->getRepository('Core:Index');
+        $qb = $ind_repo->createQueryBuilder("fi");
+        $qb->select("count(fi)");
+        $count = $qb->getQuery()->getSingleScalarResult();
+
+        exec( "ps -ax|grep 'app:amino'|grep -v grep", $amino_parsing_processes );
+        $amino_parsing_on = ( count($amino_parsing_processes)> 0 );
+        $amino_repo = $em->getRepository('Core:Amino');
+        $qb2 = $amino_repo->createQueryBuilder("fi");
+        $qb2->select("count(fi)");
+        $amino_count = $qb2->getQuery()->getSingleScalarResult();
 
         exec( "ps -ax|grep 'app:hbonds-bridges $pageslug'|grep -v grep", $hbonds_processes );
         $hbonds_on = ( count($hbonds_processes)> 0 );
         $pagedir = "customProcesses/hbonds_bridges_log/$pageslug";
-        $hbonds_progress = (file_exists("$pagedir/progress"))? file_put_contents("$pagedir/progress") : 0;
-
+        $hbonds_progress = (file_exists("$pagedir/progress"))? file_get_contents("$pagedir/progress") : 0;
 
         $pagedir = "customProcesses/models_log/$pageslug";
         $models_on = false;
-        $models_progress = (file_exists("$pagedir/progress"))? file_put_contents("$pagedir/progress") : 0;
+        $models_progress = (file_exists("$pagedir/progress"))? file_get_contents("$pagedir/progress") : 0;
 
         return $this->render('@ProteinCore/index.html.twig', [
             'pageslug'=>$pageslug,
@@ -62,6 +67,8 @@ class LandingController extends Controller
             'uploads'=> $uploads, 
             'index_count'=> $count,
             'parsing_on'=> $parsing_on,
+            'amino_index_count'=> $amino_count,
+            'amino_parsing_on'=> $amino_parsing_on,
             'hbonds_on'=> $hbonds_on,
             'hbonds_progress'=>$hbonds_progress,
             'models_on'=>$models_on,
@@ -69,6 +76,29 @@ class LandingController extends Controller
             ]);
     }
 
+    public function aminotableAction($_subpage='', $pageslug='', Request $request){
+        $em = $this->getDoctrine()->getManager();
+
+        $page_repo = $em->getRepository('Core:Page');
+        if($pageslug == '' or !$page = $page_repo->find($pageslug)){
+            return $this->redirect($this->generateUrl('protein_core_page', ['pageslug'=>$pageslug]));
+        }
+        $subpage_ind = ($_subpage != '') ? $_subpage : 1;
+        $per_page = 5000;
+
+        list($proteins, $pagination) = $this->get('api_functions')->getEntityPagination(
+            $page, 
+            'Core:Amino', true,
+            $subpage_ind, 
+            $per_page,
+            'uploadPage');  
+
+        return $this->render('@ProteinCore/amino.html.twig', [
+            'proteins'=>$proteins,
+            'pagination'=>$pagination,
+            'pageslug'=>$pageslug,
+        ]);
+    }
 
     public function calculateAction(Request $request){
         $page = $this->getPage();
@@ -76,16 +106,29 @@ class LandingController extends Controller
         if(isset($_POST['start'])){
             ### >/dev/null 2>/dev/null    id really important for initiating async process
             exec("nohup php customProcesses/hbondsBridgesWrapper.php {$page->getId()} start >/dev/null 2>/dev/null &");
-            return $this->json(array('Process initiate'));
+            return $this->json(array('successes'=>'Process initiated', 'page'=>$page->getId()));
         }
         if(isset($_POST['stop'])){
             exec("nohup php customProcesses/hbondsBridgesWrapper.php {$page->getId()} stop >/dev/null 2>/dev/null &");
-            return $this->json(array('Process terminate'));
+            return $this->json(array('successes'=>'Process terminate', 'page'=>$page->getId()));
         }
         return $this->json(array('No start/stop action provided'));
     }
 
 
+    public function aminoAction(Request $request){
+        $page = $this->getPage();
+        $slug = $page->getId();
+        if ( $file_upload_res = $this->get('api_functions')->fileDrop('AMINO') ){
+            if( $file_upload_res['final'] ){
+                ### >/dev/null 2>/dev/null    id really important for initiating async process
+                exec("nohup php customProcesses/aminoacidsWrapper.php {$file_upload_res['path']}  $slug >/dev/null 2>/dev/null &");
+            }
+            return $this->json( $file_upload_res );
+        }
+        return $this->json(array('fileDrop returned false'));
+    }
+ 
     public function indexAction(Request $request){
         if ( $file_upload_res = $this->get('api_functions')->fileDrop('INDEX') ){
             if( $file_upload_res['final'] ){
