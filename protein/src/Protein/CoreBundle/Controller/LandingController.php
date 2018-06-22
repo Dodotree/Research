@@ -83,38 +83,25 @@ class LandingController extends Controller
         if($pageslug == '' or !$page = $page_repo->find($pageslug)){
             return $this->redirect($this->generateUrl('protein_core_page', ['pageslug'=>$pageslug]));
         }
+
         $subpage_ind = ($_subpage != '') ? $_subpage : 1;
-        $per_page = 5000;
+        $per_page = 1000;
 
         list($proteins, $pagination) = $this->get('api_functions')->getEntityPagination(
             $page, 
             'Core:Amino', true,
             $subpage_ind, 
             $per_page,
-            'uploadPage');  
+            'aminoPage');  
+
+        unset($pagination['ids']);
 
         return $this->render('@ProteinCore/amino.html.twig', [
             'proteins'=>$proteins,
-            'pagination'=>$pagination,
+            'pagination'=>json_encode(array('pagination'=>$pagination)),
             'pageslug'=>$pageslug,
         ]);
     }
-
-    public function calculateAction(Request $request){
-        $page = $this->getPage();
-
-        if(isset($_POST['start'])){
-            ### >/dev/null 2>/dev/null    id really important for initiating async process
-            exec("nohup php customProcesses/hbondsBridgesWrapper.php {$page->getId()} start >/dev/null 2>/dev/null &");
-            return $this->json(array('successes'=>'Process initiated', 'page'=>$page->getId()));
-        }
-        if(isset($_POST['stop'])){
-            exec("nohup php customProcesses/hbondsBridgesWrapper.php {$page->getId()} stop >/dev/null 2>/dev/null &");
-            return $this->json(array('successes'=>'Process terminate', 'page'=>$page->getId()));
-        }
-        return $this->json(array('No start/stop action provided'));
-    }
-
 
     public function aminoAction(Request $request){
         $page = $this->getPage();
@@ -141,6 +128,20 @@ class LandingController extends Controller
         return $this->json(array('fileDrop returned false'));
     }
  
+    public function calculateAction(Request $request){
+        $page = $this->getPage();
+
+        if(isset($_POST['start'])){
+            ### >/dev/null 2>/dev/null    id really important for initiating async process
+            exec("nohup php customProcesses/hbondsBridgesWrapper.php {$page->getId()} start >/dev/null 2>/dev/null &");
+            return $this->json(array('successes'=>'Process initiated', 'page'=>$page->getId()));
+        }
+        if(isset($_POST['stop'])){
+            exec("nohup php customProcesses/hbondsBridgesWrapper.php {$page->getId()} stop >/dev/null 2>/dev/null &");
+            return $this->json(array('successes'=>'Process terminate', 'page'=>$page->getId()));
+        }
+        return $this->json(array('No start/stop action provided'));
+    }
 
     public function fastaAction(Request $request){
         if ( $file_upload_res = $this->get('api_functions')->fileDrop('FASTA') ){

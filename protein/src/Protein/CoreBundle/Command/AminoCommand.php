@@ -60,13 +60,18 @@ class AminoCommand extends ContainerAwareCommand
             return;
         }
 
+        $csv_file = "downloads/$slug";
+        $csv_arr = array('UniProt') + str_split("ARNDCQEGHILKMFPOSUTWYVBZJX");
+        $csv_keys = array_flip( $csv_arr );
+        file_put_contents($csv_file, implode(',', $csv_arr)."\n");
+
         $i = 0;
         $i_ln = 0;
         while($line= fgets($fh)){
             $i_ln++;
             if( strpos($line, '>') === 0 ){
                 if( isset($current['UniProt']) and $current['UniProt'] != ''){
-                    $this->setProteinAminoIfNew($em, $amino_repo, $current, $page);
+                    $this->setProteinAminoIfNew($em, $amino_repo, $current, $page, $csv_file, $csv_keys);
                     $i++;
                     if( $i%100 < 2 ){
                         $em->flush();
@@ -90,17 +95,27 @@ class AminoCommand extends ContainerAwareCommand
         }
 
         if( isset($current['UniProt']) ){
-            $this->setProteinAminoIfNew($em, $amino_repo, $current, $page);
+            $this->setProteinAminoIfNew($em, $amino_repo, $current, $page, $csv_file, $csv_keys);
         }
         $em->flush();
         file_put_contents($logfile, 100);
         fclose($fh);
-        #unlink($filename);
+        unlink($filename);
     }
 
-    public function setProteinAminoIfNew($em, $amino_repo, $current, $page){
+    public function setProteinAminoIfNew($em, $amino_repo, $current, $page, $csv_file, $csv_keys){
         if( $prot=$amino_repo->find($current['UniProt'])){
             $this->setProteinPage($em, $amino_repo, $prot, $page);
+
+            $csv_arr = array();
+            foreach( $csv_keys as $k=>$ind ){
+                if( $k == 'UniProt' ){ $csv_arr[0] = $current['UniProt']; continue;}
+                $getter = "get$k";
+                $v = $prot->$getter();
+                $csv_arr[$ind] = ($v)? $v: 0;
+            }
+            file_put_contents($csv_file, implode(',', $csv_arr)."\n", FILE_APPEND);
+
             return;
         }
 
@@ -109,13 +124,22 @@ class AminoCommand extends ContainerAwareCommand
 
         $line = trim($current['line']);
         $chars = count_chars($line, 1); # 1 -- is mode to return chars with counter > 1
+
+        $csv_arr = array_fill(0, count($csv_keys), 0);
+        $csv_arr[0] = $current['UniProt'];
+
         foreach ($chars as $code => $cnt) {
             $char = chr($code);
-            if( strpos("ARNDCQEGHILKMFPOSUTWYVBZJX", $char) === false ){ continue; }
+            if( $ind = strpos("ARNDCQEGHILKMFPOSUTWYVBZJX", $char) === false ){ continue; }
+
+            $csv_arr[$ind+1] = $cnt; # +1 since UniProt takes first place
+
             $setter = "set$char";
 #var_dump($char, $code, strpos("ARNDCQEGHILKMFPOSUTWYVBZJX", $char), '#######' );
             $prt->$setter($cnt);
         }
+
+        file_put_contents($csv_file, implode(',', $csv_arr)."\n", FILE_APPEND);
 
         $prt->addPage($page);
         $page->addAminoacid($prt);

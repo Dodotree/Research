@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Judo Heroes - A Universal JavaScript demo application with React</title>
+    <title>Proteins</title>
     <link rel="stylesheet" href="{{ absolute_url(asset('css/style.css')) }}">
     <link rel="stylesheet" href="{{ absolute_url(asset('bundles/proteincore/bootstrap/css/bootstrap.css')) }}">
     <link rel="stylesheet" href="{{ absolute_url(asset('bundles/proteincore/dropzone/basic.css')) }}">
@@ -14,7 +14,7 @@
 {% block body %}
     <div id="main"></div>
     <script id="preload">
-      window.__PRELOADED_STATE__ = "{#{ 'aaa'|raw }#}";
+      window.__PRELOADED_STATE__ = '{{ '{}'|raw }}';
       window.__PAGESLUG__ = "{{pageslug}}";
     </script>
 
@@ -106,6 +106,7 @@ note that .pdb files will not be created for every protein on the input list, on
               <span id="amino-process-span">
               Amino Acid table count {{amino_index_count}}, process ongoing: {{ amino_parsing_on ? 'Yes' : 'No' }}
               </span>
+              <a href="{{pageslug}}/aminotable">Table of aminoacids</a>
             </td>
           </tr>
         </table>

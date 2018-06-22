@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Judo Heroes - A Universal JavaScript demo application with React</title>
+    <title>Aminoacids</title>
     <link rel="stylesheet" href="{{ absolute_url(asset('css/style.css')) }}">
     <link rel="stylesheet" href="{{ absolute_url(asset('bundles/proteincore/bootstrap/css/bootstrap.css')) }}">
     <link rel="stylesheet" href="{{ absolute_url(asset('bundles/proteincore/dropzone/basic.css')) }}">
@@ -14,32 +14,45 @@
 {% block body %}
     <div id="main"></div>
     <script id="preload">
-      window.__PRELOADED_STATE__ = "{#{ 'aaa'|raw }#}";
+      window.__PRELOADED_STATE__ = '{{ pagination|raw }}';
       window.__PAGESLUG__ = "{{pageslug}}";
     </script>
 
     <div class="container-fluid">
 
-      <div class="ml-5 mr-5">
-        <h4>Protein Amino Acids: {{ proteins|length }}</h4>
-        <table class="table" id="proteins-table">
+      <div class="ml-5 mr-5 mt-5">
+        <h3>Protein Amino Acids.</h3>
+
+        <a class="btn btn-sm btn-outline-dark" href="../../downloads/{{pageslug}}">Load whole file</a>
+        <nav class="nav nav-pills mt-3" aria-label="Page navigation">
+            <ul class="pagination"></ul>
+        </nav>
+
+        <div class="table-responsive">
+        <table class="table table-sm" id="proteins-table">
           <thead>
             <tr>
+              {% if proteins|length > 0 %}
               {% for k, v in proteins[0] %}
-              <td>{{ k }}</td>
+              <th scope="col">{{ k }}</th>
               {% endfor %}
+              {% endif %}
             </tr>
           </thead>
           <tbody>
             {% for protein in proteins %}
             <tr>
               {% for k, v in protein %}
-              <td>{{ (v)? v : 0 }}</td>
+              <td scope="col">{{ (v)? v : 0 }}</td>
               {% endfor %}
             </tr>
             {% endfor %}
           </tbody>
         </table>
+        </div>
+
+        <nav class="nav" aria-label="Page navigation"><ul class="pagination"></ul></nav>
+
       </div>
 
     </div>

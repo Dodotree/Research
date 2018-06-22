@@ -4,9 +4,65 @@ $('.mydropzone').addClass('dropzone');
 
 var webSocket = window.WebSocket || window.MozWebSocket;
 
+var Pagination = {
+    init: function(st){
+        if('undefined' == typeof(st.pagination) || $(".pagination").length == 0){ return; }
+        Pagination.generate(st.pagination);
+    },
+    bind: function(){
+    },
+    activatePage: function(p){
+        var prev = $('.page-item-previous'), 
+            current = $('.page-link[data-id=' + p.current + ']').closest('.page-item'),
+            next = $('.page-item-next');
+
+        if('undefined' == typeof(p.previous)){
+            prev.addClass('disabled');
+            prev.html('<span class="page-link">Previous</span>');
+        }else{
+console.log(p);
+            prev.removeClass('disabled');
+            prev.html('<a class="page-link" data-id="' + p.previous + '" href="' + p.previous + '">Previous</a>');
+        }
+
+        
+        if( current.length > 0 ){
+            current.addClass('active');
+            current.html('<span class="page-link">' + p.current + '</span>');
+        }
+
+        if('undefined' == typeof(p.next)){
+            next.addClass('disabled');
+            next.html('<span class="page-link">Next</span>');
+        }else{
+            next.removeClass('disabled');
+            next.html('<a class="page-link" data-id="' + p.next + '" href="' + p.next + '">Next</a>');
+        }
+    },
+    generate: function(p){
+        var pa = $(".pagination");
+        pa.append('<li class="page-item"><a class="page-link" href="1">First (1)</a></li>');
+        pa.append('<li class="page-item page-item-previous"></li>');
+        $.each(p.pagesInRange, function(i,pg){
+            pa.append('<li class="page-item"><a class="page-link range-page" data-id="' 
+                + pg + '" href="' + pg + '">' + pg + '</a></li>');
+        });
+        pa.append('<li class="page-item page-item-next"></li>');
+        pa.append('<li class="page-item"><a class="page-link" href="' + p.last + '">Last (' + p.last + ')</a></li>');
+        pa.append( '<li class="page-item disabled"><span class="page-link">' + p.numItemsPerPage + ' per page, ' 
+            + p.currentItemCount + ' on page, total ' + p.totalCount + '</span></li>');
+        Pagination.activatePage( p );
+    }
+}
+
 var Page = {
     init: function(){
         Page.slug = window.__PAGESLUG__;
+        Page.state = JSON.parse(window.__PRELOADED_STATE__);
+
+        Pagination.init( Page.state );
+        if( $("#index-dropzone").length == 0 ){ return; }
+
         Page.initDropzone("#index-dropzone", 'index', "Drop INDEX file here", "INDEX", {});
         Page.initDropzone("#pdb-dropzone", 'pdbfile', "Drop PDB file here", "PDB", {});
         Page.initDropzone("#fasta-dropzone", 'fasta', "Drop .fasta file here", "FASTA", {});
