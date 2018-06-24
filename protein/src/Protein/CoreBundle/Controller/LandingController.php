@@ -218,6 +218,7 @@ class LandingController extends Controller
             }
 
             $page = $this->getPage();
+            $slug = $page->getId();
             $filename = $file_upload_res['path'];
 
             $tot = (int)exec("wc -l '$filename' 2>/dev/null") -1;
@@ -229,7 +230,7 @@ class LandingController extends Controller
 
             return $this->json(array(
                 'reload'=>($tot < 3000), 
-                'page'=>$page->getId(), 
+                'page'=>$slug, 
                 'successes'=>$successes, 
                 'errors'=>$errors, 
                 'warnings'=>$warnings ));

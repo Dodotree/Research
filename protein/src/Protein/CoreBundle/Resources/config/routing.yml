@@ -28,6 +28,12 @@ protein_core_index_global:
     path:     /global_index/
     defaults: { _controller: ProteinCoreBundle:Landing:indexglobal }
 
+protein_core_page_index_file:
+    path:     /{pageslug}/index
+    defaults: { _controller: ProteinCoreBundle:Landing:index }
+    requirements:
+        pageslug: \w+
+
 protein_core_index_file:
     path:     /index
     defaults: { _controller: ProteinCoreBundle:Landing:index }
@@ -35,6 +41,12 @@ protein_core_index_file:
 protein_core_fasta_file:
     path:     /fasta
     defaults: { _controller: ProteinCoreBundle:Landing:fasta }
+
+protein_core_page_fasta_file:
+    path:     /{pageslug}/fasta
+    defaults: { _controller: ProteinCoreBundle:Landing:fasta }
+    requirements:
+        pageslug: \w+
 
 protein_core_aminotable:
     path:     /{pageslug}/aminotable/
@@ -58,6 +70,12 @@ protein_core_page_amino_file:
 protein_core_amino_file:
     path:     /amino
     defaults: { _controller: ProteinCoreBundle:Landing:amino }
+
+protein_core_page_pdb_file:
+    path:     /{pageslug}/pdbfile
+    defaults: { _controller: ProteinCoreBundle:Landing:pdbfile }
+    requirements:
+        pageslug: \w+
 
 protein_core_pdb_file:
     path:     /pdbfile
