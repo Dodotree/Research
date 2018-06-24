@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aminoacids</title>
+    <link rel="stylesheet" href="{{ absolute_url(asset('css/style.css')) }}">
+    <link rel="stylesheet" href="{{ absolute_url(asset('bundles/proteincore/bootstrap/css/bootstrap.css')) }}">
+    <link rel="stylesheet" href="{{ absolute_url(asset('bundles/proteincore/dropzone/basic.css')) }}">
+    <link rel="stylesheet" href="{{ absolute_url(asset('bundles/proteincore/tableexport/css/tableexport.css')) }}">
+</head>
+
+<body>
+{% block body %}
+    <div id="main"></div>
+    <script id="preload">
+      window.__PRELOADED_STATE__ = '{{ pagination|raw }}';
+      window.__PAGESLUG__ = "";
+    </script>
+
+    <div class="container-fluid">
+
+      <div class="ml-5 mr-5 mt-5">
+        <h3>Global Index</h3>
+
+        <nav class="nav nav-pills mt-3" aria-label="Page navigation">
+            <ul class="pagination"></ul>
+        </nav>
+
+        <div class="table-responsive">
+        <table class="table table-sm" id="proteins-table">
+          <thead>
+            <tr>
+              {% if proteins|length > 0 %}
+              {% for k, v in proteins[0] %}
+              <th scope="col">{{ k }}</th>
+              {% endfor %}
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for protein in proteins %}
+            <tr>
+              {% for k, v in protein %}
+              <td scope="col">{{ (v)? v : 0 }}</td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        </div>
+
+        <nav class="nav" aria-label="Page navigation"><ul class="pagination"></ul></nav>
+
+      </div>
+
+    </div>
+
+    <div class="flash-box"></div>
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ absolute_url(asset('bundles/proteincore/bootstrap/jquery.js')) }}" type="text/javascript"></script>
+    <script src="{{ absolute_url(asset('bundles/proteincore/bootstrap/js/bootstrap.js')) }}" type="text/javascript"></script>
+    <script src="{{ absolute_url(asset('bundles/proteincore/dropzone/dropzone.js')) }}" type="text/javascript"></script>
+    <script src="{{ absolute_url(asset('bundles/proteincore/tableexport/js/xlsx.min.js')) }}" type="text/javascript"></script>
+    <script src="{{ absolute_url(asset('bundles/proteincore/tableexport/js/FileSaver.js')) }}" type="text/javascript"></script>
+    <script src="{{ absolute_url(asset('bundles/proteincore/tableexport/js/tableexport.js')) }}" type="text/javascript"></script>
+    <script src="{{ absolute_url(asset('bundles/proteincore/js/index.js')) }}" type="text/javascript"></script>
+{% endblock %}
+
+</body>
+</html>

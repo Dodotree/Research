@@ -73,6 +73,24 @@ class Index
      */
     private $bridges;
 
+    
+
+    public function serializeArray()
+    {
+        return array(
+            'filename' => $this->filename,
+            'organism_id' => $this->organism_id,
+            'UniProt'=> $this->UniProt,
+            'len'=> $this->len,
+            'qmean'=> $this->qmean,
+            'qmean_norm'=> $this->qmean_norm,
+            'bonds'=> $this->bonds,
+            'bridges'=> $this->bridges,
+        );
+    }
+
+
+
     /**
      * Set filename.
      *

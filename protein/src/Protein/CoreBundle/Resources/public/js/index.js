@@ -20,7 +20,6 @@ var Pagination = {
             prev.addClass('disabled');
             prev.html('<span class="page-link">Previous</span>');
         }else{
-console.log(p);
             prev.removeClass('disabled');
             prev.html('<a class="page-link" data-id="' + p.previous + '" href="' + p.previous + '">Previous</a>');
         }
@@ -49,8 +48,8 @@ console.log(p);
         });
         pa.append('<li class="page-item page-item-next"></li>');
         pa.append('<li class="page-item"><a class="page-link" href="' + p.last + '">Last (' + p.last + ')</a></li>');
-        pa.append( '<li class="page-item disabled"><span class="page-link">' + p.numItemsPerPage + ' per page, ' 
-            + p.currentItemCount + ' on page, total ' + p.totalCount + '</span></li>');
+        pa.parent().append( '<span class="navbar-text ml-3">' + p.numItemsPerPage + ' per page, ' 
+            + p.currentItemCount + ' on page, total ' + p.totalCount + '</span>');
         Pagination.activatePage( p );
     }
 }
@@ -60,7 +59,9 @@ var Page = {
         Page.slug = window.__PAGESLUG__;
         Page.state = JSON.parse(window.__PRELOADED_STATE__);
 
-        Pagination.init( Page.state );
+        if( $(".pagination").length != 0 ){ 
+            Pagination.init( Page.state );
+        }
         if( $("#index-dropzone").length == 0 ){ return; }
 
         Page.initDropzone("#index-dropzone", 'index', "Drop INDEX file here", "INDEX", {});
@@ -81,7 +82,11 @@ var Page = {
             trimWhitespace: true // (Boolean), remove all leading/trailing newlines, spaces, and tabs from cell text in the exported file(s) (default: false)
         });
 
-        $('#proteins-table .top.tableexport-caption').append(' <a class="btn btn-sm btn-outline-secondary" href="/">Clear document</a>');
+        $('#proteins-table .top.tableexport-caption').append(' <a class="btn btn-sm btn-outline-secondary" href="/">Clear document</a>'
+            + '<nav class="nav nav-pills mt-3" aria-label="Page navigation"><ul class="pagination"></ul></nav>');
+        if( $("#proteins-table .pagination").length != 0 ){ 
+            Pagination.init( Page.state );
+        }
 
         $('#hbonds-bridges-start').click(function(e){
             e.preventDefault();
@@ -117,14 +122,78 @@ var Page = {
                     dictDefaultMessage: message,
                     paramName: paramName
         });
+
         Page[id].on("complete", function(file) { // even chunked file gives it only once
             var data = file.xhr.response;
-            if( typeof( data ) == 'string' ){ data = JSON.parse(data); }
+            if( typeof( data ) == 'string' ){ 
+                data = JSON.parse(data); 
+            }
+            Page.handleUploadResponse(data);
             if('undefined' != typeof(data.page)){
                 Page.slug = data.page;
             }
             Page[id].removeFile(file);
         });
+    },
+
+    handleUploadResponse: function(data){
+        if('undefined' != typeof(data.successes)){
+            if('undefined' != typeof(data.successes.inserted_fasta_records_number)
+                && data.successes.inserted_fasta_records_number > 0){
+                    window.location.reload(true);
+            }
+            if('undefined' != typeof(data.successes.protein)){
+                Page.proteinRow(data.successes.protein);
+            }
+            if('undefined' != typeof(data.successes.upload)){
+                Page.uploadRow(data.successes.upload);
+            }
+        }
+        if('undefined' != typeof(data.errors) && data.errors.length > 0){
+            flashCard.add('danger', JSON.stringify(data.errors));
+        }
+    },
+    
+    proteinRow: function(row){
+        if( $('#'+row.id).length > 0 ){
+            $('#'+row.id).replaceWith( Page.getProteinRow(row) );
+            return;
+        }
+        $("#proteins-table tbody").append( Page.getProteinRow(row) );
+    },
+
+    getProteinRow: function(row){
+        return $('<tr id="' + row.id + '">'
+           + '<td>' + row.id + '</td>'
+           + '<td>' + row.name + '</td>'
+           + '<td>' + row.gene + '</td>'
+           + '<td>' + row.species + '</td>'
+           + '<td>' + row.len + '</td>'
+           + '<td>' + row.qmean + '</td>'
+           + '<td>' + row.qmean_norm + '</td>'
+           + '<td>' + row.bonds + '</td>'
+           + '<td>' + row.bridges + '</td>'
+           + '<td>' + row.filename + '</td>'
+           + '</tr>');
+    },
+
+    uploadRow: function(row){
+        if( $('#upload_'+row.id).length > 0 ){
+            $('#upload_'+row.id).replaceWith( Page.getUploadRow(row) );
+            return;
+        }
+        $(".uploads-table tbody").append( Page.getUploadRow(row) );
+    },
+
+    getUploadRow: function(row){
+        return $('<tr id="upload_' + row.id + '">'
+           + '<td>' + row.id + '</td>'
+           + '<td>' + row.UniProt + '</td>'
+           + '<td>' + row.filename + '</td>'
+           + '<td>' + row.record + '</td>'
+           + '<td>' + row.qmean + '</td>'
+           + '<td>' + row.attempts + '</td>'
+           + '</tr>');
     }
 }
 

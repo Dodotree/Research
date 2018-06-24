@@ -6,6 +6,28 @@ protein_core_calculate:
     path:     /calculate
     defaults: { _controller: ProteinCoreBundle:Landing:calculate }
 
+
+protein_core_species_subpage:
+    path:     /species/{_subpage}
+    defaults: { _controller: ProteinCoreBundle:Landing:species }
+    requirements:
+        _subpage: \d+
+
+protein_core_species:
+    path:     /species/
+    defaults: { _controller: ProteinCoreBundle:Landing:species }
+
+
+protein_core_index_global_subpage:
+    path:     /global_index/{_subpage}
+    defaults: { _controller: ProteinCoreBundle:Landing:indexglobal }
+    requirements:
+        _subpage: \d+
+
+protein_core_index_global:
+    path:     /global_index/
+    defaults: { _controller: ProteinCoreBundle:Landing:indexglobal }
+
 protein_core_index_file:
     path:     /index
     defaults: { _controller: ProteinCoreBundle:Landing:index }
@@ -48,11 +70,6 @@ protein_core_about:
     defaults: { _controller: ProteinCoreBundle:Static:about }
 
 protein_core_page:
-    path:     /{pageslug}
-    defaults: { _controller: ProteinCoreBundle:Landing:landing }
-    requirements:
-        pageslug: \w+
-protein_core_page_slash:
     path:     /{pageslug}/
     defaults: { _controller: ProteinCoreBundle:Landing:landing }
     requirements:

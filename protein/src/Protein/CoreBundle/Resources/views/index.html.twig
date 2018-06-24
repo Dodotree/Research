@@ -14,11 +14,59 @@
 {% block body %}
     <div id="main"></div>
     <script id="preload">
-      window.__PRELOADED_STATE__ = '{{ '{}'|raw }}';
+      window.__PRELOADED_STATE__ = '{{ pagination|raw }}';
       window.__PAGESLUG__ = "{{pageslug}}";
     </script>
 
     <div class="container-fluid">
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <a class="navbar-brand" href="#">Protein</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item active">
+        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{path('protein_core_index_global')}}">Index</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{path('protein_core_species')}}">Species</a>
+      </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Pages
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          {% for pg in pages %}
+          <a class="dropdown-item" href="{{path('protein_core_page', {'pageslug':pg.getId()})}}">{{pg.getId()}}</a>
+          {% endfor %}
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="#">5b23e94e45622 amino acids</a>
+        </div>
+      </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Processes
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="#">Page</a>
+          <a class="dropdown-item" href="#">Another page</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="#">5b23e94e45622 amino acids</a>
+        </div>
+      </li>
+    </ul>
+    <form class="form-inline my-2 my-lg-0">
+      <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+      <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+    </form>
+  </div>
+</nav>
 
       <h2 class="mt-5 ml-5 mr-5">High-Throughput Quantification of Hydrogen Bonds and Salt Bridges in Proteins</h2>
 
@@ -66,7 +114,13 @@ note that .pdb files will not be created for every protein on the input list, on
                     aria-valuemin="0"
                     aria-valuemax="100">0%</div>
                 </div>
-              SWISS INDEX table count {{index_count}}, process ongoing: {{ parsing_on ? 'Yes' : 'No' }}
+                <div>
+                  SWISS INDEX table count {{index_count}}
+                </div>
+                <div>
+                  process ongoing: {{ parsing_on ? 'Yes' : 'No' }}
+                  <button id="hbonds-bridges-stop" class="btn btn-sm btn-outline-secondary">Stop</button>
+                </div>
             </td>
             <td>
                 <div id="hbonds-progress" class="progress fade">
@@ -78,11 +132,20 @@ note that .pdb files will not be created for every protein on the input list, on
               <button id="hbonds-bridges-start" class="btn btn-sm btn-outline-secondary">Get BONDs and SaltBridges</button>
               <button id="hbonds-bridges-stop" class="btn btn-sm btn-outline-secondary">Stop</button>
               <span id="hbonds-process-span">
-                Process {{ hbonds_on ? 'On' : 'Off' }}
-                {{ hbonds_on ? hbonds_progress : '' }}
-              </span>
+              <div>
+                Process <span id="hbonds-process-on">{{ hbonds_on ? 'On' : 'Off' }}</span>
+              </div>
+              <div>
+                <span id="hbonds-process-count">{{ hbonds_on ? hbonds_progress : '' }}</span>
+              </div>
             </td>
             <td>
+                <div id="fasta-progress" class="progress fade">
+                  <div class="progress-bar bg-info" role="progressbar" style="width: 0%;"
+                    aria-valuenow="0"
+                    aria-valuemin="0"
+                    aria-valuemax="100">0%</div>
+                </div>
                 <div id="modeling-progress" class="progress fade">
                   <div class="progress-bar bg-info" role="progressbar" style="width: 0%;"
                     aria-valuenow="0"
@@ -91,10 +154,12 @@ note that .pdb files will not be created for every protein on the input list, on
                 </div>
               <button id="models-start" class="btn btn-sm btn-outline-secondary">Request models</button>
               <button id="models-stop" class="btn btn-sm btn-outline-secondary">Stop</button>
-              <span id="models-process-span">
-                Process {{ models_on ? 'On' : 'Off' }}
-                {{ models_on ? models_progress : '' }}
-              </span>
+              <div>
+                Process <span id="models-process-on">{{ models_on ? 'On' : 'Off' }}</span>
+              </div>
+              <div>
+                <span id="models-process-count">{{ models_on ? models_progress : '' }}</span>
+              </div>
             </td>
             <td>
                 <div id="amino-progress" class="progress fade">
@@ -103,17 +168,21 @@ note that .pdb files will not be created for every protein on the input list, on
                     aria-valuemin="0"
                     aria-valuemax="100">0%</div>
                 </div>
-              <span id="amino-process-span">
-              Amino Acid table count {{amino_index_count}}, process ongoing: {{ amino_parsing_on ? 'Yes' : 'No' }}
-              </span>
-              <a href="{{pageslug}}/aminotable">Table of aminoacids</a>
+                <div>
+                  Amino Acid table count <span id="amino-table-count">{{amino_index_count}}</span> 
+                </div>
+                <div>
+                  Process ongoing: <span id="amino-process-on">{{ amino_parsing_on ? 'Yes' : 'No' }}</span>
+                  <button id="amino-process-stop" class="btn btn-sm btn-outline-secondary">Stop</button>
+                </div>
+              <a href="{{pageslug}}/aminotable">Table of aminoacids for page</a>
             </td>
           </tr>
         </table>
       </div>
 
       <div class="ml-5 mr-5">
-        <h4>Proteins: {{ proteins|length }}</h4>
+        <h4>Proteins</h4>
         <table class="table" id="proteins-table">
           <thead>
             <tr>
@@ -132,7 +201,7 @@ note that .pdb files will not be created for every protein on the input list, on
           </thead>
           <tbody>
             {% for protein in proteins %}
-            <tr>
+            <tr id="{{ protein.id }}">
               <td>{{ protein.id }}</td>
               <td>{{ protein.name }}</td>
               <td>{{ protein.gene }}</td>
@@ -143,7 +212,6 @@ note that .pdb files will not be created for every protein on the input list, on
               <td>{{ protein.bonds }}</td>
               <td>{{ protein.bridges }}</td>
               <td>{{ protein.filename }}</td>
-              <!-- td>{{ protein.record }}</td -->
             </tr>
             {% endfor %}
           </tbody>
@@ -151,10 +219,11 @@ note that .pdb files will not be created for every protein on the input list, on
       </div>
 
       <div class="ml-5 mr-5">
-        <h4>File uploads: {{ uploads|length }}</h4>
+        <h4>PDB File uploads: {{ uploads|length }}</h4>
         <table class="table uploads-table">
           <thead>
             <tr>
+              <th>ID</th>
               <th>UniProt</th>
               <th>File Name</th>
               <th>Index</th>
@@ -164,7 +233,8 @@ note that .pdb files will not be created for every protein on the input list, on
           </thead>
           <tbody>
             {% for upload in uploads %}
-            <tr>
+            <tr id="upload_{{ upload.id }}">
+              <td>{{ upload.id }}</td>
               <td>{{ upload.UniProt }}</td>
               <td>{{ upload.filename }}</td>
               <td>{{ upload.record }}</td>

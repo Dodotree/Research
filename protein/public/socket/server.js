@@ -16,7 +16,8 @@ var logs = {
     amino: 'aminoacids_log',
     modeling: 'modeling_log',
     hbonds: 'hbonds_bridges_log',
-    parsing: 'parsing_log'
+    parsing: 'parsing_log',
+    fasta: 'fasta_log',
 }
 
 

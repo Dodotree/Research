@@ -70,6 +70,7 @@ class Upload
     public function serializeArray()
     {
         return array(
+            'id' => $this->id,
             'UniProt' => $this->UniProt,
             'filename' => $this->filename,
             'record' => ($this->index_record)? $this->index_record->getFilename(): null,

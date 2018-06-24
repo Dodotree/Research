@@ -36,9 +36,9 @@ class ApiFunctions
         $ids = array();
         foreach($entity_collection as $e){
             $collection[] = $e->serializeArray(); // Entity should implement serializeArray()
-            $ids[] = $e->getId();
+            #$ids[] = $e->getId();
         }
-        $pagination['ids'] = $ids;
+        #$pagination['ids'] = $ids;
         $pagination['pageParameterName'] = $pageParam;
     return array($collection, $pagination);
     }
@@ -65,7 +65,17 @@ class ApiFunctions
     public function setProteinIfNew($prot_repo, $current, $page){
         if( $prot=$prot_repo->find($current['UniProt'])){ 
             $this->setProteinPage($prot_repo, $prot, $page);
-            return; 
+    
+            if($current['gene'] and !$prot->getGene()){ $prot->setGene($current['gene']); }
+            if($current['name'] and !$prot->getName()){ $prot->setName($current['name']); }
+            if($current['species'] and !$prot->getSpecies()){ 
+                $species = $this->em->getRepository('Core:Species')->findOneBy(array('name'=>$current['species']));
+                $prot->setSpecies($species); 
+            }
+            $this->em->persist($prot);
+            $this->em->flush();
+
+            return $prot; 
         }
 
         $prt = new Protein();
@@ -97,20 +107,25 @@ class ApiFunctions
         $page->addProtein($prt);
         $this->em->persist($prt);
         $this->em->persist($page);
+    return $prt;
     }
+
 
     public function parseFASTA($page, $filename, &$successes, &$errors, &$warnings){
         $prot_repo = $this->em->getRepository('Core:Protein');
 
         $fh = fopen($filename, 'r');
         if(!$fh){
+            $errors[] = "Can not open the file";
             return false;
         }
 
         fgets($fh); 
 
         $i = 0;
+        $ii = 0;
         while($line= fgets($fh)){
+            $ii++;
             if( strpos($line, '>') === 0 ){
                 if( isset($current['UniProt']) and $current['UniProt'] != ''){
                     $current['len'] = strlen($current['line']);
@@ -154,34 +169,22 @@ class ApiFunctions
         $this->em->flush();
         fclose($fh);
         unlink($filename);
-        $successes[] = "Inserted $i records";
+
+        $successes["inserted_fasta_records_number"] = $i;
+        $successes["lines"] = $ii;
+        $successes["filename"] = $filename;
     }
 
-    
-    public function collectPDB($page, $path, $filename, &$successes, &$errors, &$warnings){
-        $index_repo = $this->em->getRepository('Core:Index');
-        $prot_repo = $this->em->getRepository('Core:Protein');
-        $upload_repo = $this->em->getRepository('Core:Upload');
 
-        $fnm = preg_replace('/.*\//','', $filename);
-        $filename_base = str_replace('.pdb', '', $fnm);
-        $filename_base = str_replace('.PDB', '', $filename_base);
-
-        $UniProt = $gene = $species = $abbr = $protein_name = $len = $qmean = $qmean_norm = null;
-
-        $protein = $prot_repo->find($filename_base); #ca not be both
-        $record = $index_repo->find($filename_base);
-
-        if( $record ){
-            $UniProt = $record->getUniProt();
-            $len = $record->getLen();
-            $qmean = $record->getQmean();
-            $qmean_norm = $record->getQmeanNorm();
-            $protein = $prot_repo->find($UniProt); #can not be both
-        }else{
+    public function parsePDB($path, &$UniProt, &$gene, &$abbr, &$protein_name, &$qmean){
             #TITLE    2 A0A173FZD2_MYTTR A0A173FZD2 Cytochrome c oxidase subunit 1 # second line
             #REMARK   3  GMQE    0.75
             #REMARK   3  QMN4    -5.68
+
+            #SOURCE   2 ORGANISM_SCIENTIFIC: CRAMBE HISPANICA SUBSP. ABYSSINICA;
+            #SOURCE   3 ORGANISM_COMMON: ABYSSINIAN CRAMBE,ABYSSINIAN KALE;
+            #SOURCE   4 ORGANISM_TAXID: 3721
+
             $file = file($path);
             $title_line = trim($file[1]);
             $arr = preg_split('/\s+/',$title_line);
@@ -201,6 +204,35 @@ class ApiFunctions
             if(count($qmean_lines)>0){
                 $qmean = preg_replace('/.*\s+/', '', trim(current(array_filter($qmean_lines))));
             }
+    }
+
+    
+    public function collectPDB($page, $path, $filename, &$successes, &$errors, &$warnings){
+        $index_repo = $this->em->getRepository('Core:Index');
+        $prot_repo = $this->em->getRepository('Core:Protein');
+        $upload_repo = $this->em->getRepository('Core:Upload');
+
+        $fnm = preg_replace('/.*\//','', $filename);
+        $filename_base = str_replace('.pdb', '', $fnm);
+        $filename_base = str_replace('.PDB', '', $filename_base);
+
+        $UniProt = $gene = $species = $abbr = $protein_name = $len = $qmean = $qmean_norm = null;
+
+        $protein = $prot_repo->find($filename_base); #can not be both
+        $record = $index_repo->find($filename_base);
+
+        if( $record ){
+            $UniProt = $record->getUniProt();
+            $len = $record->getLen();
+            $qmean = $record->getQmean();
+            $qmean_norm = $record->getQmeanNorm();
+            $protein = $prot_repo->find($UniProt); #can not be both
+
+            $gene = $protein->getGene();
+            $protein_name = $protein->getName();
+            $species = $protein->getSpecies();
+        }else{
+            $this->parsePDB($path, $UniProt, $gene, $abbr, $protein_name, $qmean);
         }
 
         if( !($protein or $UniProt) ){
@@ -209,16 +241,35 @@ class ApiFunctions
         }
         if( $protein2 = $prot_repo->find($UniProt) and $protein ){
             $protein = $protein2;
+
+            $gene = $protein->getGene();
+            $protein_name = $protein->getName();
+            $species = $protein->getSpecies();
         }
+
+        if( $protein and( !$gene or !$protein_name or !$species )){
+            # parse anyway for missing data # though unlikely since bulk files don't have titles
+            $this->parsePDB($path, $UniProt, $gene, $abbr, $protein_name, $qmean);
+            if($gene){ $protein->setGene($gene); }
+            if($protein_name){ $protein->setName($protein_name); }
+            if($abbr and $species = $this->em->getRepository('Core:Species')->findOneBy(array('abbr'=>$abbr))){
+                $protein->setSpecies($species);
+            } 
+            $this->em->persist($protein);
+            $this->em->flush();
+        }
+        $warnings[] = array('gene'=>$gene, 'abbr'=>$abbr, 'name'=>$protein_name);
 
         $savefile = true;
         $savename = $fnm;
-        $same_upload = $upload_repo->findOneBy(array('page'=>$page, 'UniProt'=>$UniProt, 'qmean'=>$qmean));
-        $errors[] = array($fnm, is_null($same_upload) );
-        if( $same_upload ){
+        $upload = $upload_repo->findOneBy(array('page'=>$page, 'UniProt'=>$UniProt, 'qmean'=>$qmean));
+
+        $warnings[] = array('filename'=>$fnm, 'same_upload'=>!is_null($upload) );
+
+        if( $upload ){
             $savefile = false;
-            $same_upload->setAttempts( $same_upload->getAttempts() + 1 );
-            $this->em->persist($same_upload);
+            $upload->setAttempts( $upload->getAttempts() + 1 );
+            $this->em->persist($upload);
         }
 
         if( $savefile and file_exists("uploads/pdb/$fnm") ){
@@ -228,6 +279,19 @@ class ApiFunctions
                 $savename = $this->getNextAvailableFilename( "uploads/pdb/", $filename_base, '.pdb', $errors );
                 $savename .= ".pdb";
             }
+        }
+        if( $savefile and !rename($path, "uploads/pdb/$savename") ){
+            $errors[] = "Not able to move file to uploads/pdb folder";
+        }
+
+        if( !$upload ){
+            $upload = new Upload();
+            $upload->setUniProt($UniProt);
+            $upload->setQmean($qmean);
+            $upload->setFilename($savename);
+            $upload->setIndexRecord($record);
+            $upload->setPage($page);
+            $this->em->persist($upload);
         }
 
         if( !$protein ){
@@ -244,11 +308,13 @@ class ApiFunctions
                 'filename'=>$savename,
                 'record'=>$record,
             );
-            $this->setProteinIfNew($prot_repo, $current, $page);
+            $protein = $this->setProteinIfNew($prot_repo, $current, $page);
             $savefile = true;
         }elseif( $qmean < $protein->getQmean() ){
             $errors[] = "Current PDB has better Qmean";
             $savefile = false;
+
+            $this->setProteinPage($prot_repo, $protein, $page);
         }else{
             # replace qmean and filename in protein
             $protein->setQmean($qmean);
@@ -259,25 +325,18 @@ class ApiFunctions
             $this->setProteinPage($prot_repo, $protein, $page);
         }
 
-        if( $savefile and !rename($path, "uploads/pdb/$savename") ){
-            $errors[] = "Not able to move file to uploads/pdb folder";
-        }
-
-        if( !$same_upload ){
-            $upload = new Upload();
-            $upload->setUniProt($UniProt);
-            $upload->setQmean($qmean);
-            $upload->setFilename($savename);
-            $upload->setIndexRecord($record);
-            $upload->setPage($page);
-            $this->em->persist($upload);
-        }
-
         $this->em->flush();
+
+        $successes = array(
+            'protein'=>$protein->serializeArray(),
+            'upload'=>$upload->serializeArray(),
+        );
+
+    return true;
     }
 
 
-    public function fileDrop($file_type){
+    public function fileDrop($file_type, &$errors){
        if (!empty($_FILES)){
             foreach ($_FILES as $file) {
                 if ($file['error'] != 0) {
