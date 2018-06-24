@@ -49,7 +49,10 @@ class LandingController extends Controller
         $amino_parsing_on = ( count($amino_parsing_processes)> 0 );
         $amino_repo = $em->getRepository('Core:Amino');
         $qb2 = $amino_repo->createQueryBuilder("fi");
-        $qb2->select("count(fi)");
+        $qb2->select("count(fi)")
+          ->innerJoin('fi.pages','pages')
+          ->innerJoin('Core:Page', 'p', 'WITH','p.id = pages.id')
+          ->where("p.id='$pageslug'");
         $amino_count = $qb2->getQuery()->getSingleScalarResult();
 
         exec( "ps -ax|grep 'app:hbonds-bridges $pageslug'|grep -v grep", $hbonds_processes );

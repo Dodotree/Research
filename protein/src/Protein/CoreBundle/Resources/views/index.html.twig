@@ -74,7 +74,7 @@
         <p><b>This is software to automatically calculate the total number of hydrogen bonds and salt bridges in large numbers of proteins. The software takes either UniProt .fasta or protein database .pdb files as input.</b></p>
         <p><b>If starting with UniProt .fasta files:</b></p>
         <ul>
-            <li>Upload a .fasta file (downloaded from the UniProt database (<a href="http://www.uniprot.org/">http://www.uniprot.org/</a>)</li>
+            <li>Upload a .fasta file (downloaded from the UniProt database (<a href="http://www.uniprot.org/">http://www.uniprot.org/</a>)</li> Indexing of 10K+ files require separate process. After indexing process is done, please, reload the page to see results.
             <li>Once files have been uploaded, chose “Calculate using .fasta” button to calculate hydrogen bonds and salt bridges for each protein.</li>
                 <ul>
                     <li>this will first use SWISS MODEL algorithm (<a href="https://swissmodel.expasy.org/interactive">https://swissmodel.expasy.org/interactive</a>) to generate a protein database (.pdb) file for each protein sequence in the .fasta file</li>
@@ -175,7 +175,7 @@ note that .pdb files will not be created for every protein on the input list, on
                   Process ongoing: <span id="amino-process-on">{{ amino_parsing_on ? 'Yes' : 'No' }}</span>
                   <button id="amino-process-stop" class="btn btn-sm btn-outline-secondary">Stop</button>
                 </div>
-              <a href="{{pageslug}}/aminotable">Table of aminoacids for page</a>
+              <a href="{{path('protein_core_aminotable', {'pageslug': pageslug})}}">Table of aminoacids for page</a>
             </td>
           </tr>
         </table>

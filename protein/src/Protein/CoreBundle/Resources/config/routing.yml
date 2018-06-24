@@ -49,6 +49,12 @@ protein_core_aminotable_subpage:
         pageslug: \w+
         _subpage: \d+
 
+protein_core_page_amino_file:
+    path:     /{pageslug}/amino
+    defaults: { _controller: ProteinCoreBundle:Landing:amino }
+    requirements:
+        pageslug: \w+
+
 protein_core_amino_file:
     path:     /amino
     defaults: { _controller: ProteinCoreBundle:Landing:amino }

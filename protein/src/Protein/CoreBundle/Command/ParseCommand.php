@@ -72,6 +72,7 @@ class ParseCommand extends ContainerAwareCommand
             $i++;
             if( $i%100 < 2 ){
                 $em->flush();
+                $em->clear();
                 file_put_contents('customProcesses/parsing_log/progress', round(100*$i/$tot));
             }
         }

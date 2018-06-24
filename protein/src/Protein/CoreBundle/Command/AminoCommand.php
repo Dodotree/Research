@@ -75,6 +75,8 @@ class AminoCommand extends ContainerAwareCommand
                     $i++;
                     if( $i%100 < 2 ){
                         $em->flush();
+                        $em->clear();
+                        $page = $em->getRepository('Core:Page')->find($slug);
                         file_put_contents($logfile, round(100*$i_ln/$tot));
                         print round(100*$i_ln/$tot)."\n";
                     }
@@ -98,6 +100,7 @@ class AminoCommand extends ContainerAwareCommand
             $this->setProteinAminoIfNew($em, $amino_repo, $current, $page, $csv_file, $csv_keys);
         }
         $em->flush();
+        $em->clear();
         file_put_contents($logfile, 100);
         fclose($fh);
         unlink($filename);

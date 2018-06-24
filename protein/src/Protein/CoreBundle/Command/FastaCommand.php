@@ -72,8 +72,10 @@ class FastaCommand extends ContainerAwareCommand
                     $current['len'] = strlen($current['line']);
                     $this->setProteinIfNew($em, $prot_repo, $current, $page);
                     $i++;
-                    if( $i%100 < 2 ){
+                    if( $i%100 == 0 and $i != 0 ){
                         $em->flush();
+                        $em->clear();
+                        $page = $em->getRepository('Core:Page')->find($slug);
                         file_put_contents($logfile, round(100*$i_ln/$tot));
                         print round(100*$i_ln/$tot)."\n";
                     }
@@ -110,6 +112,7 @@ class FastaCommand extends ContainerAwareCommand
             $this->setProteinIfNew($em, $prot_repo, $current, $page);
         }
         $em->flush();
+        $em->clear();
         file_put_contents($logfile, 100);
         fclose($fh);
         #unlink($filename);
@@ -131,12 +134,12 @@ class FastaCommand extends ContainerAwareCommand
             $page->addProtein($prot);
             $em->persist($prot);
             $em->persist($page);
-            $em->flush();
         }
     }
 
     public function setProteinIfNew($em, $prot_repo, $current, $page){
         if( $prot=$prot_repo->find($current['UniProt'])){
+
             $this->setProteinPage($em, $prot_repo, $prot, $page);
 
             if($current['gene'] and !$prot->getGene()){ $prot->setGene($current['gene']); }
@@ -146,7 +149,6 @@ class FastaCommand extends ContainerAwareCommand
                 $prot->setSpecies($species);
             }
             $em->persist($prot);
-            $em->flush();
 
             return $prot;
         }
