@@ -45,6 +45,12 @@ services:
         tags:
             - { name: 'console.command', command: 'app:fasta' }
 
+    swiss_commands:
+        public: true
+        class: Protein\CoreBundle\Command\SwissCommand
+        tags:
+            - { name: 'console.command', command: 'app:swiss' }
+
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
     #Protein\:

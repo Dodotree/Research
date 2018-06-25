@@ -57,9 +57,9 @@ class Species
     {
         return array(
             'id' => $this->id,
-            'name' => $this->slug,
-            'abbr' => $this->getSerializedProteins(),
-            'uploads'=> $this->uploads,
+            'name' => $this->name,
+            'abbr' => $this->abbr,
+            'proteins'=> count($this->proteins)
         );
     }
 

@@ -178,19 +178,13 @@ class Amino
 
     public function serializeArray()
     {
-        return array(
-            'id' => $this->id,
-            'name' => $this->name,
-            'gene' => $this->gene,
-            'len' => $this->len,
-            'qmean' => $this->qmean,
-            'qmean_norm' => $this->qmean_norm,
-            'bonds' => $this->bonds,
-            'bridges' => $this->bridges,
-            'species' => ($this->species) ? $this->species->getName() : 'unknown',
-            'filename'=>$this->filename,
-            'record'=>($this->getIndexRecord())? $this->getIndexRecord()->getFilename(): null,
-        );
+        $row =  array();
+        foreach( $this as $key=>$val ){ 
+            if( $key != 'pages' ){
+                $row[$key] = $val; 
+            }
+        }
+    return $row;
     }
 
     public function getSerializedPages()
