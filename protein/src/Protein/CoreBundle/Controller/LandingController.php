@@ -11,6 +11,7 @@ class LandingController extends Controller
 {
     public function landingAction($_subpage='', $pageslug='', Request $request){
         #exec("nohup php customProcesses/parsingWrapper.php uploads/whole_from_chunks/INDEX_10 >>uploads/out 2>>uploads/err &");
+        file_put_contents('uploads/out', "landing\n", FILE_APPEND);
 
         $em = $this->getDoctrine()->getManager();
 
@@ -91,6 +92,8 @@ class LandingController extends Controller
 
 
     public function indexglobalAction($_subpage='', Request $request){
+        file_put_contents('uploads/out', "indexglobal\n", FILE_APPEND);
+
         $em = $this->getDoctrine()->getManager();
 
         $subpage_ind = ($_subpage != '') ? $_subpage : 1;
@@ -110,7 +113,31 @@ class LandingController extends Controller
     }
 
 
+    public function proteinAction($_subpage='', Request $request){
+        file_put_contents('uploads/out', "protein\n", FILE_APPEND);
+
+        $em = $this->getDoctrine()->getManager();
+
+        $subpage_ind = ($_subpage != '') ? $_subpage : 1;
+        $per_page = 1000;
+
+        list($proteins, $pagination) = $this->get('api_functions')->getEntityPagination(
+            null,
+            'Core:Protein', true,
+            $subpage_ind,
+            $per_page,
+            'indexPage');
+
+        return $this->render('@ProteinCore/protein.html.twig', [
+            'proteins'=>$proteins,
+            'pagination'=>json_encode(array('pagination'=>$pagination)),
+        ]);
+    }
+
+
     public function speciesAction($_subpage='', Request $request){
+        file_put_contents('uploads/out', "species\n", FILE_APPEND);
+
         $em = $this->getDoctrine()->getManager();
 
         $subpage_ind = ($_subpage != '') ? $_subpage : 1;
@@ -131,6 +158,8 @@ class LandingController extends Controller
 
 
     public function aminotableAction($_subpage='', $pageslug='', Request $request){
+        file_put_contents('uploads/out', "amino table\n", FILE_APPEND);
+
         $em = $this->getDoctrine()->getManager();
 
         $page_repo = $em->getRepository('Core:Page');
@@ -156,6 +185,8 @@ class LandingController extends Controller
     }
 
     public function aminoAction(Request $request){
+        file_put_contents('uploads/out', "amino file\n", FILE_APPEND);
+
         $page = $this->getPage();
         $slug = $page->getId();
 
@@ -175,6 +206,8 @@ class LandingController extends Controller
     }
  
     public function indexAction(Request $request){
+        file_put_contents('uploads/out', "index file\n", FILE_APPEND);
+
         $successes = array();
         $errors = array();
         $warnings = array();
@@ -190,8 +223,29 @@ class LandingController extends Controller
         $errors[] = 'fileDrop returned false';
         return $this->json(array( 'errors'=>$errors, 'warnings'=>$warnings ));
     }
+
+
+    public function swissAction(Request $request){
+        file_put_contents('uploads/out', "swiss command\n", FILE_APPEND);
+
+        $page = $this->getPage();
+
+        if(isset($_POST['start'])){
+            ### >/dev/null 2>/dev/null    id really important for initiating async process
+            exec("nohup php customProcesses/swissWrapper.php {$page->getId()} start >/dev/null 2>/dev/null &");
+            return $this->json(array('successes'=>'Process initiated', 'page'=>$page->getId()));
+        }
+        if(isset($_POST['stop'])){
+            exec("nohup php customProcesses/swissWrapper.php {$page->getId()} stop >/dev/null 2>/dev/null &");
+            return $this->json(array('successes'=>'Process terminate', 'page'=>$page->getId()));
+        }
+        return $this->json(array('No start/stop action provided'));
+    }
+
  
     public function calculateAction(Request $request){
+        file_put_contents('uploads/out', "calculate command\n", FILE_APPEND);
+
         $page = $this->getPage();
 
         if(isset($_POST['start'])){
@@ -207,6 +261,8 @@ class LandingController extends Controller
     }
 
     public function fastaAction(Request $request){
+        file_put_contents('uploads/out', "fasta file\n", FILE_APPEND);
+
         $successes = array();
         $errors = array();
         $warnings = array();
@@ -242,6 +298,8 @@ class LandingController extends Controller
 
 
     public function pdbfileAction(Request $request){
+        file_put_contents('uploads/out', "pdb file\n", FILE_APPEND);
+
         $successes = array();
         $errors = array();
         $warnings = array();
@@ -273,13 +331,49 @@ class LandingController extends Controller
             $page_repo = $em->getRepository('Core:Page');
 
             if(isset($_POST['pageslug']) and  $_POST['pageslug'] != '' and $page=$page_repo->find($_POST['pageslug'])){
+                file_put_contents('uploads/out', "page slug is valid\n", FILE_APPEND);
             }else{
+                file_put_contents('uploads/out', "NEW PAGE CREATED\n" . $this->getReport() . "\n", FILE_APPEND);
                 $page = new Page();
                 $page->setId(uniqid());
                 $em->persist($page);
                 $em->flush();
             }
     return $page;
+    }
+
+    public function getReport(){
+
+        $ts = mktime();
+        /////////////// detecting ip ////////////////////////////
+        $client  = @$_SERVER['HTTP_CLIENT_IP'];
+        $forward = @$_SERVER['HTTP_X_FORWARDED_FOR'];
+        $remote  = @$_SERVER['REMOTE_ADDR'];
+
+        if(filter_var(     $client,  FILTER_VALIDATE_IP)){
+            $ip = $client;
+        }elseif(filter_var($forward, FILTER_VALIDATE_IP)){
+            $ip = $forward;
+        }elseif(filter_var($remote,  FILTER_VALIDATE_IP)){
+            $ip = $remote;
+        }else{
+            $ip = 'no_ip';
+        }
+        /////////////// detecting pageURL ////////////////////////////
+        $pageURL = ( isset($_SERVER["HTTPS"]) and $_SERVER["HTTPS"] != "off" )? "https://" : "http://";
+        $port = ( !isset($_SERVER["SERVER_PORT"] ) )? '' : ':'.$_SERVER["SERVER_PORT"];
+        if ( ($pageURL == "https://" and $port == ":443" ) or
+             ($pageURL == "http://" and $port == ":80" ) ){
+                $port = '';
+        }
+        $pageURL .= $_SERVER["SERVER_NAME"].$port.$_SERVER["REQUEST_URI"];
+        ////////////// detecting referer /////////////////////////////
+        $referer = ( isset($_SERVER['HTTP_REFERER']) and $pageURL != $_SERVER['HTTP_REFERER'] )?
+                        htmlspecialchars( $_SERVER['HTTP_REFERER'] ) : 'no_referer';
+        ////////////// detecting client agent ////////////////////////
+        $agent = ( isset($_SERVER["HTTP_USER_AGENT"]))? $_SERVER["HTTP_USER_AGENT"]:'unknown';
+
+    return implode( ', ', array( $ip, $ts, $pageURL, $referer, $agent));
     }
 
 }

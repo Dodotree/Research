@@ -65,6 +65,8 @@ class ApiFunctions
     public function setProteinIfNew($prot_repo, $current, $page){
         if( $prot=$prot_repo->find($current['UniProt'])){ 
             $this->setProteinPage($prot_repo, $prot, $page);
+
+            $prot->setSequence($current['line']);
     
             if($current['gene'] and !$prot->getGene()){ $prot->setGene($current['gene']); }
             if($current['name'] and !$prot->getName()){ $prot->setName($current['name']); }
@@ -83,6 +85,7 @@ class ApiFunctions
         $prt->setName($current['name']);
         $prt->setGene($current['gene']);
         $prt->setLen($current['len']);
+        $prt->setSequence($current['line']);
         if( isset($current['species']) or isset($current['species_abbr']) ){
             $spec_repo = $this->em->getRepository('Core:Species');
             $spec = null;

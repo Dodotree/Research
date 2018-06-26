@@ -48,6 +48,11 @@ class Protein
     private $len;
 
     /**
+     * @ORM\Column(type="string", length=100000, unique=false, nullable = true)
+     */
+    private $sequence;
+
+    /**
      * @ORM\Column(type="float", nullable=true)
      */
     private $qmean;
@@ -421,5 +426,29 @@ class Protein
     public function getIndexRecord()
     {
         return $this->index_record;
+    }
+
+    /**
+     * Set sequence.
+     *
+     * @param string|null $sequence
+     *
+     * @return Protein
+     */
+    public function setSequence($sequence = null)
+    {
+        $this->sequence = $sequence;
+
+        return $this;
+    }
+
+    /**
+     * Get sequence.
+     *
+     * @return string|null
+     */
+    public function getSequence()
+    {
+        return $this->sequence;
     }
 }

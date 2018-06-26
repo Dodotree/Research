@@ -98,6 +98,17 @@ var Page = {
             $.post('calculate', 'pageslug=' + Page.slug + '&stop=1')
                 .done(function(reply){ flashCard.add('success', JSON.stringify(reply)); });
         });
+
+       $('#models-start').click(function(e){
+            e.preventDefault();
+            $.post('swiss', 'pageslug=' + Page.slug + '&start=1')
+                .done(function(reply){ flashCard.add('success', JSON.stringify(reply)); });
+        });
+        $('#models-stop').click(function(e){
+            e.preventDefault();
+            $.post('swiss', 'pageslug=' + Page.slug + '&stop=1')
+                .done(function(reply){ flashCard.add('success', JSON.stringify(reply)); });
+        });
     },
 
     initDropzone: function(id, url, message, paramName, params){

@@ -234,4 +234,28 @@ class ModelRequest
     {
         return $this->calledAt;
     }
+
+    /**
+     * Set callcount.
+     *
+     * @param int $callcount
+     *
+     * @return ModelRequest
+     */
+    public function setCallcount($callcount)
+    {
+        $this->callcount = $callcount;
+
+        return $this;
+    }
+
+    /**
+     * Get callcount.
+     *
+     * @return int
+     */
+    public function getCallcount()
+    {
+        return $this->callcount;
+    }
 }

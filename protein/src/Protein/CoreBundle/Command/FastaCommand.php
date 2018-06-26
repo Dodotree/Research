@@ -142,6 +142,8 @@ class FastaCommand extends ContainerAwareCommand
 
             $this->setProteinPage($em, $prot_repo, $prot, $page);
 
+            $prot->setSequence($current['line']);
+
             if($current['gene'] and !$prot->getGene()){ $prot->setGene($current['gene']); }
             if($current['name'] and !$prot->getName()){ $prot->setName($current['name']); }
             if($current['species'] and !$prot->getSpecies()){
@@ -158,6 +160,7 @@ class FastaCommand extends ContainerAwareCommand
         $prt->setName($current['name']);
         $prt->setGene($current['gene']);
         $prt->setLen($current['len']);
+        $prt->setSequence($current['line']);
         if( isset($current['species']) or isset($current['species_abbr']) ){
             $spec_repo = $em->getRepository('Core:Species');
             $spec = null;

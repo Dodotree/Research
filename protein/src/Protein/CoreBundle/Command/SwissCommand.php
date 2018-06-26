@@ -72,14 +72,15 @@ class SwissCommand extends ContainerAwareCommand
         foreach($res as $i=>$prot){
             # technically pdb file could be not the best
             if( ($prot['filename'] != '' and file_exists("uploads/pdb/{$prot['filename']}")) 
-                or $mreq_repo->find($prot['id'])){
+                            or $mreq_repo->find($prot['id'])){
                 continue;
             }
 
             $UniProt = $prot['id'];
             $output->writeln("$$$$$$$$$ $UniProt");
             if( !$this->checkAPIifModelExists($em, $UniProt, $pagedir, $output) ) {
-                $this->requestModel($em, $UniProt);
+                $output->writeln("-----> request $UniProt");
+                $this->requestModel($em, $prot_repo, $pagedir, $UniProt, $output);
             }
 
             file_put_contents("$pagedir/progress", round(100*$i/$tot));
@@ -252,23 +253,118 @@ class SwissCommand extends ContainerAwareCommand
     }
 
 
-    public function requestModel($em, $UniProt){
+    public function requestModel($em, $prot_repo, $pagedir, $UniProt, $output){
 
-        #csRadioGroup=secstruc
-        #&csrfmiddlewaretoken=$csrf_token
-        #&is_alignment=false
-        #&target=
-        #&aligned_template=
-        #&project_title=$title
-        #&email=
-        #&automodel=true
-        #&whatDoesThisDo=
+        if( !$csrf_token = $this->setCookie_getCSRF( $pagedir, $UniProt ) ){
+            file_put_contents("$pagedir/err", "No csrf for request $UniProt");
+            return false;
+        }
+
+        #Accept  */*
+        #Accept-Encoding gzip, deflate, br
+        #Accept-Language en-US,en;q=0.5
+        #Connection keep-alive
+        #Content-Length 791
+        #Content-Type application/x-www-form-urlencoded; charset=UTF-8
+        #Cookie  csrftoken=yykpcqQQWcTnskln95xo…t48jybv24tzz8ku54mhovei5xs8u8 # one
+        #Host swissmodel.expasy.org
+        #Referer https://swissmodel.expasy.org/interactive
+        #User-Agent Mozilla/5.0 (Windows NT 10.0; …) Gecko/20100101 Firefox/59.0
+        #X-CSRFToken rcGlYKrez45RrRk8zRfOriyQg1SYuk…LsQk43XUskWxzvnix1zvlTOQJnrAR # two
+        #X-Requested-With XMLHttpRequest
+
+        $prot = $prot_repo->find($UniProt);
+        $target = $prot->getSequence();
+
+        if(!$target) {
+            file_put_contents("$pagedir/err", "No sequence found for $UniProt");
+            return false;
+        }
+
+        $name = ($prot->getName())? $prot->getName() : '';
+        $gene = ($prot->getGene())? $prot->getGene() : '';
+        $abbr = ($prot->getSpecies())? '_'. $prot->getSpecies()->getAbbr() : '';
+        $title = "$gene$abbr $UniProt $name";
+
+        $post = "csRadioGroup=secstruc"
+                ."&csrfmiddlewaretoken=$csrf_token" # from text body
+                ."&is_alignment=false"
+                ."&target=$target" # sequence MPSPSRKSRSRSRSRSKSPKRSPAKKARKTPKKPRAAGGVKK...
+                ."&aligned_template="
+                ."&project_title=$title"
+                ."&email="
+                ."&automodel=true"
+                ."&whatDoesThisDo=";
+
+        $uri = "https://swissmodel.expasy.org/interactive";
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL,$uri);
+        curl_setopt ($ch, CURLOPT_HTTPHEADER, Array(
+            "Content-Type: application/x-www-form-urlencoded; charset=UTF-8",
+            "Host: swissmodel.expasy.org",
+            "X-CSRFToken: $csrf_token",
+        ));
+        curl_setopt($ch, CURLOPT_POST,1);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 300);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_COOKIEJAR, "$pagedir/cookie");
+        curl_setopt($ch, CURLOPT_COOKIEFILE, "$pagedir/cookie");
+
+        $result=curl_exec ($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $last_url = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+        curl_close ($ch);
+
+        if ($httpCode != 200) {
+            file_put_contents("$pagedir/err", "Failed to post swiss request form for $UniProt");
+            return false;
+        }
 
         # record redirect -- project url for later checks if ready
+        $output->writeln($result);
+        $output->writeln("**************".$last_url);
 
-        return false;
+        return true;
     }
 
+
+    public function setCookie_getCSRF( $pagedir, $UniProt ){
+        $uri = "https://swissmodel.expasy.org/interactive";
+
+        $handle = curl_init();
+
+        curl_setopt($handle, CURLOPT_URL, $uri);
+        curl_setopt($handle, CURLOPT_POST, false);
+        curl_setopt($handle, CURLOPT_BINARYTRANSFER, false);
+        curl_setopt($handle, CURLOPT_HEADER, false);
+        curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($handle, CURLOPT_COOKIEJAR, "$pagedir/cookie");
+        curl_setopt($handle, CURLOPT_COOKIEFILE, "$pagedir/cookie");
+
+        $body = curl_exec($handle);
+        $httpCode = curl_getinfo($handle, CURLINFO_HTTP_CODE);
+
+        if ($httpCode != 200) {
+            file_put_contents("$pagedir/err", "No reply for csrf request");
+            return false;
+        }
+
+        # grep line  104: 
+        #  xhr.setRequestHeader("X-CSRFToken", "SELrYWBuiaknKy4cmUQgUlHUgTKZXm9NvQeiAUyaKiH5rHt1HOHZHLcLm9yayjTX");
+        $body_lines =  preg_split("/([\f\r\n]+)/", $body);
+        $csrf_lines = preg_grep("/X-CSRFToken/", $body_lines);
+        $csrf = preg_replace( "/.*X-CSRFToken\",\s+\"/", "", array_values($csrf_lines)[0]);
+        $csrf = preg_replace( "/\"\);\s*/", "", $csrf); 
+
+        #file_put_contents("$pagedir/$UniProt", file_get_contents("$pagedir/cookie"). $csrf);
+
+    return $csrf;
+    }
 
     public function setHbondsBridges($prot_repo, $UniProt, $hbonds, $bridges){
         $qrb = $prot_repo->createQueryBuilder('pr');
