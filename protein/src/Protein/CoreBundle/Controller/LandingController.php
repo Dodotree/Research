@@ -65,6 +65,15 @@ class LandingController extends Controller
         $models_on = false;
         $models_progress = (file_exists("$pagedir/progress"))? file_get_contents("$pagedir/progress") : 0;
 
+        $req_repo = $em->getRepository('Core:ModelRequest');
+        $qr = $req_repo->createQueryBuilder("r");
+        $date = new \DateTime();
+        $date->modify('-24 hour');
+        $requests_today = $qr->select('count(r.id)')
+            ->andWhere('r.createdAt > :date')
+            ->setParameter(':date', $date)
+            ->getQuery()->getSingleScalarResult();
+
         $pages = $page_repo->findAll();
 
         foreach( $pages as $page ){
@@ -87,6 +96,7 @@ class LandingController extends Controller
             'models_on'=>$models_on,
             'models_progress'=>$models_progress,
             'pages'=> $pages,
+            'model_requests_today'=>$requests_today,
             ]);
     }
 

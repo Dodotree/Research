@@ -16,33 +16,17 @@ class SwissCommand extends ContainerAwareCommand
     {
         $this
             ->setName('app:swiss')
-            ->addArgument('cmd', InputArgument::REQUIRED, 'Commands "request" and "collect"')
             ->addArgument('page', InputArgument::REQUIRED, 'Page slug for list of UniProts that needs pdb files')
             ->setDescription('Command to request pdb files from Swiss site')
             ->setHelp('Use as command for creating requsts for models for each UniProt on the page that does not have pdb yet (or in case Swiss has pdb with better qmean already listed, retrive that)');
     }
+
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $container = $this->getContainer();
         $em = $container->get('doctrine')->getManager();
         $slug = $input->getArgument('page');
-        $command = $input->getArgument('cmd');
-
-        $output->writeln("$$$$$$$$$$ $command");
-
-        if($command == 'request'){
-            $this->startProcess($em, $slug, $output);
-        }
-        if($command == 'collect'){
-            $this->collectModels($em, $UniProt, $page, $output);
-        }
-        opcache_reset();
-        $output->writeln("Done!");
-    }
-
-
-    public function startProcess($em, $slug, $output){
 
         $prot_repo = $em->getRepository('Core:Protein');
         $mreq_repo = $em->getRepository('Core:ModelRequest');
@@ -56,8 +40,17 @@ class SwissCommand extends ContainerAwareCommand
         if (!is_dir($pagedir)) {
             mkdir($pagedir, 0777, true);
         }
-        file_put_contents("$pagedir/progress", 0);
 
+        $this->startProcess($em, $prot_repo, $mreq_repo, $pagedir, $slug, $output);
+
+        opcache_reset();
+        $output->writeln("Done!");
+    }
+
+
+    public function startProcess($em, $prot_repo, $mreq_repo, $pagedir, $slug, $output){
+
+        file_put_contents("$pagedir/progress", 0);
 
         $qb = $prot_repo->createQueryBuilder("pr");
         $qb->select("pr.id, pr.filename, pr.qmean")
@@ -87,45 +80,6 @@ class SwissCommand extends ContainerAwareCommand
         }        
         file_put_contents("$pagedir/progress", 100);
         #$this->rrmdir($pagedir);
-    }
-
-
-    public function collectModels($em, $UniProt, $page, $output){
-
-        $prot_repo = $em->getRepository('Core:Protein');
-        $mreq_repo = $em->getRepository('Core:ModelRequest');
-        $page_repo = $em->getRepository('Core:Page');
-        if($slug == '' or  !$page=$page_repo->find($slug)){
-            $output->writeln("Page not found");
-            return;
-        }
-
-        $pagedir = "customProcesses/swiss_log/$slug";
-        if (!is_dir($pagedir)) {
-            mkdir($pagedir, 0777, true);
-        }
-
-        # take page proteins vs page proteins without files
-        file_put_contents("$pagedir/collect_progress", 0);
-
-        $reqs = $mreq_repo->findBy(array('status'=>0)); # for all pages!
-        foreach($reqs as $req){
-            # if 2 weeks, remove
-            # if time() + (callcount*2)^3 > createdAt
-                # check if url ready
-                # check if there are models (if not -> model impossible to UniProt table, continue)
-                # find the best
-                # if( $this->loadModelPDB($UniProt, $url) ){ $em->remove($model_request); }
-                # else err. loading model to $model_request, $last_error
-
-            #$output->writeln($prot['filename']);
-            #$brgs = $this->curlBridges($prot['id'], $prot['filename'], $pagedir, $output);
-            #$hbonds = $this->curlHbonds($prot['filename'], $output);
-            #$this->setHbondsBridges($prot_repo, $prot['id'], $hbonds, $brgs);
-
-        }
-
-        return false;
     }
 
 
@@ -230,12 +184,6 @@ class SwissCommand extends ContainerAwareCommand
     }
 
 
-    public function loadModelPDB($UniProt, $page, $url){
-        # $this->registerPDB($em, $filename, $structure, $UniProt);
-        return false;
-    }
-
-
     public function registerPDB($em, $filename, $structure, $UniProt){ # valid for all pages
         if(!$prot = $em->getRepository('Core:Protein')->find($UniProt)){
             return false;
@@ -254,6 +202,20 @@ class SwissCommand extends ContainerAwareCommand
 
 
     public function requestModel($em, $prot_repo, $pagedir, $UniProt, $output){
+
+        $req_repo = $em->getRepository('Core:ModelRequest');
+        $qr = $req_repo->createQueryBuilder("r");
+        $date = new \DateTime();
+        $date->modify('-24 hour');
+        $requests_today = $qr->select('count(r.id)')
+            ->andWhere('r.createdAt > :date')
+            ->setParameter(':date', $date)
+            ->getQuery()->getSingleScalarResult();
+
+        if( $requests_today > 1995 ){
+            file_put_contents("$pagedir/err", "Too many requests today, try again tomorrow");
+            return false;
+        }
 
         if( !$csrf_token = $this->setCookie_getCSRF( $pagedir, $UniProt ) ){
             file_put_contents("$pagedir/err", "No csrf for request $UniProt");
@@ -325,8 +287,16 @@ class SwissCommand extends ContainerAwareCommand
         }
 
         # record redirect -- project url for later checks if ready
-        $output->writeln($result);
-        $output->writeln("**************".$last_url);
+        
+        $mreq = new ModelRequest();
+        $mreq->setId($UniProt);
+        $mreq->setUrl($last_url);
+        $mreq->setCalledAt(new \DateTime);
+        $em->persist($mreq);
+        $em->flush();
+
+        # $output->writeln($result);
+        # $output->writeln("**************".$last_url);
 
         return true;
     }
@@ -366,136 +336,5 @@ class SwissCommand extends ContainerAwareCommand
     return $csrf;
     }
 
-    public function setHbondsBridges($prot_repo, $UniProt, $hbonds, $bridges){
-        $qrb = $prot_repo->createQueryBuilder('pr');
-        $qrb->update('Core:Protein', 'pr')
-            ->set('pr.bonds', ':hbonds')
-            ->set('pr.bridges', ':bridges')
-            ->where('pr.id = :UniProt')
-            ->setParameter('hbonds', $hbonds)
-            ->setParameter('bridges', $bridges)
-            ->setParameter('UniProt', $UniProt);
-        $qrb->getQuery()->execute();
-    }
-
-    public function curlHbonds($filename, $output){
-        $target_url = "http://cib.cf.ocha.ac.jp/bitool/HBOND/HBOND.php";
-        $path = realpath("uploads/pdb/$filename");
-        $cFile = curl_file_create($path);
-        $post = array(
-            'OK'=>'start calculation',
-            'sw_file'=>$cFile,
-        );
- 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL,$target_url);
-        curl_setopt($ch, CURLOPT_POST,1);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 300); 
-        curl_setopt( $ch, CURLOPT_HTTPHEADER, array(
-         'Content-type: multipart/form-data;'
-        ) );
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
-        $result=curl_exec ($ch);
-        curl_close ($ch);
-
-        $lines = explode("\n",$result);
-        $hbonds = preg_grep('/^HBOND\s/', $lines);
-        return count(array_keys($hbonds));
-    }
-
-    public function curlBridges($UniProt, $filename, $pagedir, $output){
-        #http://bioinformatica.isa.cnr.it/ESBRI/input.html
-        $target_url = "http://bioinformatica.isa.cnr.it/ESBRI/CGI/esegui.cgi";
-        
-        /*$post = array(
-            'proteina'=>$UniProt,
-            'input-text'=>file_get_contents("uploads/pdb/$filename"),
-            'xxx'=>'xxx',
-            'catena'=>'',
-            'catena1bbb'=>'',
-            'catena2bbb'=>'',
-            'positivo'=>'Arg',
-            'catena3'=>'',
-            'numero3'=>'',
-            'ngativo'=>'Asp',
-            'catena4'=>'',
-            'numero4'=>'',
-            'dist'=>'4.0',
-            'colore'=>'All%20black'
-        );*/
-
-        $post = "proteina=$UniProt&input-text=" . file_get_contents("uploads/pdb/$filename")
-                ."&xxx=xxx&catena=&catena1bbb=&catena2bbb=&positivo=Arg&catena3=&numero3="
-                ."&ngativo=Asp&catena4=&numero4=&dist=4.0&colore=All%20black";
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL,$target_url);
-        curl_setopt ($ch, CURLOPT_HTTPHEADER, Array("Content-Type: application/x-www-form-urlencoded"));
-        curl_setopt($ch, CURLOPT_POST,1);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 300); 
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); 
-        $result=curl_exec ($ch);
-        curl_close ($ch);
-
-        if( strpos($result, "The results are available at the following") === false ){
-            $output->writeln("No link to results found");
-            return null;
-        }
-
-        #plain text result will be available at http://bioinformatica.isa.cnr.it/ESBRI/CGI/tmp/INSERTED_proteina.txt
-        #second curl needed to get that
-
-        #A0A173FZD2___attempt
-        #Residue 1   Residue 2   Distance
-        #NH1 ARG A 21    OD1 ASP A 30    3.42
-        #NH1 ARG A 21    OD2 ASP A 30    3.08
-        #ND1 HIS A 277   OE1 GLU A 508   3.53
-        #NE2 HIS A 277   OE1 GLU A 508   3.54
-
-        $ch_plain = curl_init();
-        curl_setopt($ch_plain, CURLOPT_URL, "http://bioinformatica.isa.cnr.it/ESBRI/CGI/tmp/$UniProt.txt");
-        curl_setopt($ch_plain, CURLOPT_HEADER, false);
-        curl_setopt($ch_plain, CURLOPT_RETURNTRANSFER, true);
-        $text = curl_exec($ch_plain);
-        curl_close($ch_plain);
-
-        #file_put_contents("$pagedir/sample", $text);
-        #$output->writeln($text);
-        $lines = explode("\n", $text);
-        return count($lines)-2;
-    }
-
-    public function countLines($pagedir){
-        $fh = fopen($filename, 'r');
-        if(!$fh){
-            return false;
-        }
-        fgets($fh);
-        $i = 0;
-        while($line= fgets($fh)){
-        }
-        fclose($fh);
-        unlink($filename);
-    }
-
-    function rrmdir($dir) {
-        if (is_dir($dir)) {
-            $objects = scandir($dir);
-            foreach ($objects as $object) {
-                if ($object != "." && $object != "..") {
-                    if (filetype("$dir/$object") == "dir") {
-                        $this->rrmdir("$dir/$object");
-                    } else {
-                        unlink("$dir/$object");
-                    }
-                }
-            }
-            reset($objects);
-            rmdir($dir);
-        }
-    }
 
 }
