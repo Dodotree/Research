@@ -18,6 +18,8 @@ var logs = {
     hbonds: 'hbonds_bridges_log',
     parsing: 'parsing_log',
     fasta: 'fasta_log',
+    swiss: 'swiss_log',
+    collect: 'collect_log',
 }
 
 

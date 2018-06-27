@@ -54,6 +54,15 @@ protein_core_calculate:
     path:     /calculate
     defaults: { _controller: ProteinCoreBundle:Landing:calculate }
 
+protein_core_swiss_file:
+    path:     /swiss
+    defaults: { _controller: ProteinCoreBundle:Landing:swiss }
+
+protein_core_page_swiss_file:
+    path:     /{pageslug}/swiss
+    defaults: { _controller: ProteinCoreBundle:Landing:swiss }
+    requirements:
+        pageslug: \w+
 
 protein_core_fasta_file:
     path:     /fasta
