@@ -80,13 +80,17 @@
             <li>Upload a .fasta file (downloaded from the UniProt database (<a href="http://www.uniprot.org/">http://www.uniprot.org/</a>)</li> Indexing of 10K+ files require separate process. After indexing process is done, please, reload the page to see results.
             <li>Once files have been uploaded, chose “Calculate using .fasta” button to calculate hydrogen bonds and salt bridges for each protein.</li>
                 <ul>
-                    <li>this will first use SWISS MODEL algorithm (<a href="https://swissmodel.expasy.org/interactive">https://swissmodel.expasy.org/interactive</a>) to generate a protein database (.pdb) file for each protein sequence in the .fasta file</li>
+                    <li>this will first use SWISS MODEL algorithm 
+                    (<a href="https://swissmodel.expasy.org/interactive">https://swissmodel.expasy.org/interactive</a>) 
+                    to generate a protein database (.pdb) file for each protein sequence in the .fasta file.
+                    No X allowed in a sequence.
+                    </li>
                     <li>species, protein name, gene name, length, and QMEAN values are extracted from the resulting .pdb file</li>
                     <li>modeling is restricted to 2000 protein queries per 24 hours. A bar will show progress and the results table will be updated after each protein has finished.</li>
 note that .pdb files will not be created for every protein on the input list, only proteins for which SWISS MODEL has a suitable template in their database</li>
                     <li>QMEAN scores below -4.0 are an indication of a low quality model</li>
                     <li>hydrogen bond prediction uses HBOND algorithm</li>
-                    <li>salt bridge prediction uses ESBRI algorithm<li>
+                    <li>salt bridge prediction uses ESBRI algorithm</li>
                 </ul>
             <li>Data can be downloaded as .TXT, .CSV, or .XLSX using “Download” button</li>
         </ul>
@@ -132,8 +136,8 @@ note that .pdb files will not be created for every protein on the input list, on
                     aria-valuemin="0"
                     aria-valuemax="100">0%</div>
                 </div>
-              <button id="hbonds-bridges-start" class="btn btn-sm btn-outline-secondary">Get BONDs and SaltBridges</button>
-              <button id="hbonds-bridges-stop" class="btn btn-sm btn-outline-secondary">Stop</button>
+              <button id="hbonds-bridges-start" class="hbonds-bridges-start btn btn-sm btn-outline-secondary">Get BONDs and SaltBridges</button>
+              <button id="hbonds-bridges-stop" class="hbonds-bridges-stop btn btn-sm btn-outline-secondary">Stop</button>
               <span id="hbonds-process-span">
               <div>
                 Process <span id="hbonds-process-on">{{ hbonds_on ? 'On' : 'Off' }}</span>

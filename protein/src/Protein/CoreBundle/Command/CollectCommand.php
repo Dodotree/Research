@@ -117,6 +117,15 @@ class CollectCommand extends ContainerAwareCommand
                 break;
             }
         }
+
+        if(!isset($table)){
+            file_put_contents("$pagedir/err", "No models build for $UniProt uri $uri");
+            $req->setStatus(1);
+            $em->persist($req);
+            $em->flush();
+            return false;
+        }
+
         $best_qmean = -1000000000;
         $best_id = "01";
         $best_template = "";
@@ -180,6 +189,9 @@ class CollectCommand extends ContainerAwareCommand
         if( is_null($prot_qmean) or $qmean > $prot_qmean ){
             $prot->setQmean($qmean);
             $prot->setFilename($filename);
+            $prot->setQmeanNorm(null);
+            $prot->setBonds(null);
+            $prot->setBridges(null);
             $em->persist($prot);
             $em->flush();
             return true;

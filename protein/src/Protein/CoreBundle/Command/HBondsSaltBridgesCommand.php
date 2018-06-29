@@ -60,7 +60,7 @@ class HBondsSaltBridgesCommand extends ContainerAwareCommand
         $tot = count(array_keys($res));
         foreach($res as $i=>$prot){
             if($prot['filename'] != '' and file_exists("uploads/pdb/{$prot['filename']}")
-                    and is_null($prot['bonds']) and is_null($prot['bridges'])){
+                    and ((is_null($prot['bonds']) and is_null($prot['bridges'])) or ($prot['bonds']==0 and $prot['bridges']==1) )){
 
                 #$output->writeln($prot['filename']);
                 $brgs = $this->curlBridges($prot['id'], $prot['filename'], $pagedir, $output);
@@ -186,7 +186,7 @@ class HBondsSaltBridgesCommand extends ContainerAwareCommand
         $text = curl_exec($ch_plain);
         curl_close($ch_plain);
 
-        file_put_contents("$pagedir/sample$UniProt", $text);
+        #file_put_contents("$pagedir/sample$UniProt", $text);
         #$output->writeln($text);
         $lines = explode("\n", $text);
         return count($lines)-2;

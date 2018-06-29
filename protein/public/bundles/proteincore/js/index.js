@@ -88,12 +88,12 @@ var Page = {
             Pagination.init( Page.state );
         }
 
-        $('#hbonds-bridges-start').click(function(e){
+        $('.hbonds-bridges-start').click(function(e){
             e.preventDefault();
             $.post('calculate', 'pageslug=' + Page.slug + '&start=1')
                 .done(function(reply){ flashCard.add('success', JSON.stringify(reply)); });
         });
-        $('#hbonds-bridges-stop').click(function(e){
+        $('.hbonds-bridges-stop').click(function(e){
             e.preventDefault();
             $.post('calculate', 'pageslug=' + Page.slug + '&stop=1')
                 .done(function(reply){ flashCard.add('success', JSON.stringify(reply)); });

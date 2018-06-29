@@ -242,6 +242,10 @@ class SwissCommand extends ContainerAwareCommand
             file_put_contents("$pagedir/err", "No sequence found for $UniProt");
             return false;
         }
+        if(strpos($target,"X") !== false) {
+            file_put_contents("$pagedir/err", "Sequence coutains X (not allowed) $UniProt");
+            return false;
+        }
 
         $name = ($prot->getName())? $prot->getName() : '';
         $gene = ($prot->getGene())? $prot->getGene() : '';
@@ -283,6 +287,11 @@ class SwissCommand extends ContainerAwareCommand
 
         if ($httpCode != 200) {
             file_put_contents("$pagedir/err", "Failed to post swiss request form for $UniProt");
+            return false;
+        }
+        if ($last_url == $uri) {
+            file_put_contents("$pagedir/err_$UniProt", $result); 
+            file_put_contents("$pagedir/err", "Redirected to same page $UniProt");
             return false;
         }
 
