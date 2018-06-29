@@ -1,9 +1,0 @@
-Failed to terminate the process 
-Failed to terminate the process  for page 5b2fd949d520c  3263 ?        S      0:00 php ../bin/console app:hbonds 5b2fd949d520c
-Failed to terminate the process  for page 5b2fd949d520c  3676 ?        S      0:00 php ../bin/console app:hbonds 5b2fd949d520c
-Here
-Failed to terminate the process '' for page 5b2fd949d520c  3676 ?        S      0:00 php ../bin/console app:hbonds 5b2fd949d520c
-Here
-Failed to terminate the process '' for page 5b2fd949d520c | 3676 ?        S      0:00 php ../bin/console app:hbonds 5b2fd949d520c| 3676 ?        S      0:00 php ../bin/console app:hbonds 5b2fd949d520c
-Here
-Process terminated
