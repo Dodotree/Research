@@ -56,14 +56,24 @@ class LandingController extends Controller
           ->where("p.id='$pageslug'");
         $amino_count = $qb2->getQuery()->getSingleScalarResult();
 
-        exec( "ps -ax|grep 'app:hbonds-bridges $pageslug'|grep -v grep", $hbonds_processes );
+        exec( "ps -ax|grep 'app:hbonds $pageslug'|grep -v grep", $hbonds_processes );
         $hbonds_on = ( count($hbonds_processes)> 0 );
         $pagedir = "customProcesses/hbonds_bridges_log/$pageslug";
         $hbonds_progress = (file_exists("$pagedir/progress"))? file_get_contents("$pagedir/progress") : 0;
 
-        $pagedir = "customProcesses/models_log/$pageslug";
-        $models_on = false;
+        $pagedir = "customProcesses/fasta_log/$pageslug";
+        exec( "ps -ax|grep 'app:fasta $pageslug'|grep -v grep", $fasta_processes );
+        $fasta_on = ( count($fasta_processes)> 0 );
+        $fasta_progress = (file_exists("$pagedir/progress"))? file_get_contents("$pagedir/progress") : 0;
+
+        $pagedir = "customProcesses/swiss_log/$pageslug";
+        exec( "ps -ax|grep 'app:swiss $pageslug'|grep -v grep", $models_processes );
+        $models_on = ( count($models_processes)> 0 );
         $models_progress = (file_exists("$pagedir/progress"))? file_get_contents("$pagedir/progress") : 0;
+
+        exec( "ps -ax|grep 'app:collect'|grep -v grep", $collect_processes );
+        $collect_on = ( count($collect_processes)> 0 );
+
 
         $req_repo = $em->getRepository('Core:ModelRequest');
         $qr = $req_repo->createQueryBuilder("r");
@@ -93,8 +103,11 @@ class LandingController extends Controller
             'amino_parsing_on'=> $amino_parsing_on,
             'hbonds_on'=> $hbonds_on,
             'hbonds_progress'=>$hbonds_progress,
+            'fasta_on'=>$fasta_on,
+            'fasta_progress'=>$fasta_progress,
             'models_on'=>$models_on,
             'models_progress'=>$models_progress,
+            'collect_on'=>$collect_on,
             'pages'=> $pages,
             'model_requests_today'=>$requests_today,
             ]);
@@ -143,6 +156,30 @@ class LandingController extends Controller
             'pagination'=>json_encode(array('pagination'=>$pagination)),
         ]);
     }
+
+
+
+    public function requestsAction($_subpage='', Request $request){
+        file_put_contents('uploads/out', "requests action\n", FILE_APPEND);
+
+        $em = $this->getDoctrine()->getManager();
+
+        $subpage_ind = ($_subpage != '') ? $_subpage : 1;
+        $per_page = 1000;
+
+        list($proteins, $pagination) = $this->get('api_functions')->getEntityPagination(
+            null,
+            'Core:ModelRequest', true,
+            $subpage_ind,
+            $per_page,
+            'requestsPage');
+
+        return $this->render('@ProteinCore/requests.html.twig', [
+            'proteins'=>$proteins,
+            'pagination'=>json_encode(array('pagination'=>$pagination)),
+        ]);
+    }
+
 
 
     public function speciesAction($_subpage='', Request $request){

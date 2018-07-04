@@ -2,6 +2,19 @@ protein_core_home:
     path:     /
     defaults: { _controller: ProteinCoreBundle:Landing:landing }
 
+
+
+protein_core_requests_subpage:
+    path:     /requests/{_subpage}
+    defaults: { _controller: ProteinCoreBundle:Landing:requests }
+    requirements:
+        _subpage: \d+
+
+protein_core_requests:
+    path:     /requests/
+    defaults: { _controller: ProteinCoreBundle:Landing:requests }
+
+
 protein_core_species_subpage:
     path:     /species/{_subpage}
     defaults: { _controller: ProteinCoreBundle:Landing:species }

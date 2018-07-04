@@ -76,6 +76,10 @@ class ModelRequest
     {
         return array(
             'id' => $this->id,
+            'status' => $this->status,
+            'url' => $this->url,
+            'calls' => $this->callcount,
+            'last err' => $this->last_error,
         );
     }
 

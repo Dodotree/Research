@@ -50,11 +50,13 @@ class CollectCommand extends ContainerAwareCommand
             $diff = $req->getCreatedAt()->diff($today);
             
             $callcount = $req->getCallcount();
-            if( $diff->d > 14 ){
+            if( $diff->d > 14 or $req->getUrl() == 'https://swissmodel.expasy.org/interactive' ){
                 $em->remove($req);
+                $em->flush();
                 continue;
             }
-            if( $diff->i > 0*pow($callcount*2, 3) ){
+
+            if( $diff->i > pow($callcount*2, 3) ){
                 if( !$filename = $this->checkModelPage($em, $req, $pagedir, $output) ){
 
                     $req->setCalledAt(new \DateTime);
@@ -64,7 +66,13 @@ class CollectCommand extends ContainerAwareCommand
                     continue;
                 }
 
-                $em->remove($req);
+                #$em->remove($req);
+                $req->setStatus(2);
+                $req->setLastError('');
+                $req->setCallcount( $callcount+1 );
+                $em->persist($req);
+                $em->flush();
+
                 #$output->writeln($prot['filename']);
                 #$brgs = $this->curlBridges($prot['id'], $prot['filename'], $pagedir, $output);
                 #$hbonds = $this->curlHbonds($prot['filename'], $output);
@@ -99,7 +107,11 @@ class CollectCommand extends ContainerAwareCommand
         $httpCode = curl_getinfo($handle, CURLINFO_HTTP_CODE);
 
         if ($httpCode != 200) {
-            file_put_contents("$pagedir/err", "No summary page for $UniProt");
+            file_put_contents("$pagedir/err", "No summary page for $UniProt\n", FILE_APPEND);
+            $req->setLastError("No summary page");
+            # no err set, leave for next try
+            $em->persist($req);
+            $em->flush();
             return false;
         }
 
@@ -119,8 +131,11 @@ class CollectCommand extends ContainerAwareCommand
         }
 
         if(!isset($table)){
-            file_put_contents("$pagedir/err", "No models build for $UniProt uri $uri");
-            $req->setStatus(1);
+            file_put_contents("$pagedir/err", "No models build for $UniProt uri $uri\n", FILE_APPEND);
+            # no err set, leave for next try, with this curve it shouldn't be too much
+            # set err after 1 day or do better parsing for the text
+            # $req->setStatus(1);
+            $req->setLastError("No models found");
             $em->persist($req);
             $em->flush();
             return false;
@@ -145,10 +160,13 @@ class CollectCommand extends ContainerAwareCommand
         $url = "{$uri}models/$best_id.pdb";
 
         if( !$filename = $this->loadBestRepositoryPDB($url, $UniProt, $best_template, $pagedir, $output) ){ 
+            $req->setLastError("Not able to load pdb");
+            $em->persist($req);
+            $em->flush();
             return false; 
         }
 
-    return $this->registerPDB($em, $filename, $best_qmean, $UniProt);
+    return $this->registerPDB($em, $req, $filename, $best_qmean, $UniProt);
     }
 
 
@@ -170,7 +188,7 @@ class CollectCommand extends ContainerAwareCommand
         $httpCode = curl_getinfo($handle, CURLINFO_HTTP_CODE);
 
         if ($httpCode != 200) {
-            file_put_contents("$pagedir/err", "No best pdb file for $UniProt");
+            file_put_contents("$pagedir/err", "No best pdb file for $UniProt\n", FILE_APPEND);
             return false;
         }
 
@@ -181,12 +199,16 @@ class CollectCommand extends ContainerAwareCommand
     }
 
 
-    public function registerPDB($em, $filename, $qmean, $UniProt){ # valid for all pages
+    public function registerPDB($em, $req, $filename, $qmean, $UniProt){ # valid for all pages
         if(!$prot = $em->getRepository('Core:Protein')->find($UniProt)){
+            $req->setLastError("Not UniProt found to register pdb");
+            # do not set error status, leave for another try
+            $em->persist($req);
+            $em->flush();
             return false;
         }
         $prot_qmean = $prot->getQmean();
-        if( is_null($prot_qmean) or $qmean > $prot_qmean ){
+        if( is_null($prot_qmean) or $qmean >= $prot_qmean ){
             $prot->setQmean($qmean);
             $prot->setFilename($filename);
             $prot->setQmeanNorm(null);
@@ -196,6 +218,10 @@ class CollectCommand extends ContainerAwareCommand
             $em->flush();
             return true;
         }
+        $req->setLastError("UniProt already has better pdb $qmean < $prot_qmean");
+        $req->setStatus(1);
+        $em->persist($req);
+        $em->flush();
         return false;
     }
 

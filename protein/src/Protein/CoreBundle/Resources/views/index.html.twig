@@ -20,70 +20,20 @@
 
     <div class="container-fluid">
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-  <a class="navbar-brand" href="#"><img style="width:80px" src="/images/protein.JPG"/></a>
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
 
-  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-    <ul class="navbar-nav mr-auto">
-      <li class="nav-item active">
-        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{{path('protein_core_index_global')}}">Index</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{{path('protein_core_protein')}}">UniProts</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{{path('protein_core_species')}}">Species</a>
-      </li>
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          Pages
-        </a>
-        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-          {% for pg in pages %}
-          <a class="dropdown-item" href="{{path('protein_core_page', {'pageslug':pg.getId()})}}">{{pg.getId()}}</a>
-          {% endfor %}
-          <div class="dropdown-divider"></div>
-          <a class="dropdown-item" href="#">5b23e94e45622 amino acids</a>
-        </div>
-      </li>
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          Processes
-        </a>
-        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-          <a class="dropdown-item" href="#">Page</a>
-          <a class="dropdown-item" href="#">Another page</a>
-          <div class="dropdown-divider"></div>
-          <a class="dropdown-item" href="#">5b23e94e45622 amino acids</a>
-        </div>
-      </li>
-    </ul>
-    <form class="form-inline my-2 my-lg-0">
-      <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-      <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-    </form>
-  </div>
-</nav>
-
-      <h2 class="mt-5 ml-5 mr-5">High-Throughput Quantification of Hydrogen Bonds and Salt Bridges in Proteins</h2>
+      <h2 class="mt-5 ml-5 mr-5">High-Throughput Quantification of Protein Structural Features</h2>
 
       <div class="mt-4 ml-5 mr-5 alert alert-primary">
-        <p><b>This is software to automatically calculate the total number of hydrogen bonds and salt bridges in large numbers of proteins. The software takes either UniProt .fasta or protein database .pdb files as input.</b></p>
+        <p><b>This is software to automatically calculate the total number of hydrogen bonds, salt bridges, and amino acids in large numbers of proteins. The software takes either UniProt .fasta or protein database .pdb files as input.</b></p>
         <p><b>If starting with UniProt .fasta files:</b></p>
         <ul>
             <li>Upload a .fasta file (downloaded from the UniProt database (<a href="http://www.uniprot.org/">http://www.uniprot.org/</a>)</li> Indexing of 10K+ files require separate process. After indexing process is done, please, reload the page to see results.
-            <li>Once files have been uploaded, chose “Calculate using .fasta” button to calculate hydrogen bonds and salt bridges for each protein.</li>
+            <li>Once files have been uploaded, click “Calculate using .fasta” button to calculate hydrogen bonds and salt bridges for each protein.</li>
                 <ul>
                     <li>this will first use SWISS MODEL algorithm 
                     (<a href="https://swissmodel.expasy.org/interactive">https://swissmodel.expasy.org/interactive</a>) 
                     to generate a protein database (.pdb) file for each protein sequence in the .fasta file.
-                    No X allowed in a sequence.
+                    SWISS MODEL will be unable to model proteins with an “X” in the amino acid sequence or if it's shorter then 30.
                     </li>
                     <li>species, protein name, gene name, length, and QMEAN values are extracted from the resulting .pdb file</li>
                     <li>modeling is restricted to 2000 protein queries per 24 hours. A bar will show progress and the results table will be updated after each protein has finished.</li>
@@ -94,24 +44,101 @@ note that .pdb files will not be created for every protein on the input list, on
                 </ul>
             <li>Data can be downloaded as .TXT, .CSV, or .XLSX using “Download” button</li>
         </ul>
-    <p><b>If starting with .pdb files:</b></p>
+
+        <p><b>If starting with .pdb files:</b></p>
+
         <ul>
-            <li>Drag or upload multiple .pdb files. Click to begin calculating hydrogen bonds and salt bridges for each file.</li> 
+            <li>Drag or upload multiple .pdb files. Click "Calculate using .pdb" to begin calculating hydrogen bonds and salt bridges for each file.</li> 
                 <ul>
                     <li>in cases where multiple .pdb files have been generated for the same protein (determined by duplicate UniProt IDs), only the model with the highest QMEAN score will be added to the results table.</li> 
                     <li>for this reason, the number of input .pdb files may not match the number of results (i.e rows) in the data table.</li>
                     <li>if SWISS MODEL bulk modeling approach was used, an index file can be uploaded which will cross-reference protein and gene names if present in the index.</li>
                 </ul>
             <li>Data can be downloaded as .TXT, .CSV, or .XLSX using “Download” buttons.</li>
-      </div>
+        </ul>
+
+        <p><b>If counting amino acids:</b></p>
+
+        <ul>
+            <li>Drag or upload .fasta file (downloaded from the UniProt database (http://www.uniprot.org/)</li>
+            <li>Click the “Count Amino Acids” Buttons to start the calculations</li>
+            <li>Amino acid counts are automatically transferred to a separate results table. Use the “Amino Acids Results Table” link to access the data.</li>
+        </uL>
+        <p><b>Accessing the database:</b></p>
+
+        <ul>
+            <li>Structural data compiled through this software is stored in a database. Use the links below to access the database.</li>
+            <li>INDEX displays data from the index files provided with SWISS MODEL bulk protein modeling approach</li> 
+            <li>UNIPROTS displays data sorted by unique UniProt identifier</li>
+            <li>SPECIES lists species and number of proteins from each species in the database</li>
+            <li>REQUESTS list of all interactive model requests on Swiss Modeling with project urls and status</li>
+            <li>PAGES switch to any page currently available</li>
+        </uL>
+
+
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+          <a class="navbar-brand" href="#">DataBase<!-- img style="width:80px" src="/images/protein.JPG"/ --></a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+              <!-- li class="nav-item active">
+                <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+              </li -->
+              <li class="nav-item">
+                <a class="nav-link" href="{{path('protein_core_index_global')}}">Index</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{path('protein_core_protein')}}">UniProts</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{path('protein_core_species')}}">Species</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{path('protein_core_requests')}}">Requests</a>
+              </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  Pages
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  {% for pg in pages %}
+                  <a class="dropdown-item" href="{{path('protein_core_page', {'pageslug':pg.getId()})}}">{{pg.getId()}}</a>
+                  {% endfor %}
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item" href="#">5b23e94e45622 amino acids</a>
+                </div>
+              </li>
+              <!-- li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  Processes
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <a class="dropdown-item" href="#">Page</a>
+                  <a class="dropdown-item" href="#">Another page</a>
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item" href="#">5b23e94e45622 amino acids</a>
+                </div>
+              </li -->
+            </ul>
+            <!-- form class="form-inline my-2 my-lg-0">
+              <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+              <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </form -->
+          </div>
+        </nav>
+
+      </div> <!-- END OF BLUE BOX -->
 
       <div class="ml-5 mr-5">
         <table class="table dropzone-table">
           <tr class="dropzones-row">
-            <td scope="row" class="col-3"><div class="mydropzone" id="index-dropzone"></div></td>
-            <td scope="row" class="col-3"><div class="mydropzone" id="pdb-dropzone"></div></td>
-            <td scope="row" class="col-3"><div class="mydropzone" id="fasta-dropzone"></div></td>
-            <td scope="row" class="col-3"><div class="mydropzone" id="amino-dropzone"></div></td>
+            <td scope="row"><div class="mydropzone" id="index-dropzone"></div></td>
+            <td scope="row"><div class="mydropzone" id="pdb-dropzone"></div></td>
+            <td scope="row"><div class="mydropzone" id="fasta-dropzone"></div></td>
+            <td scope="row"><div class="mydropzone" id="amino-dropzone"></div></td>
           </tr>
           <tr>
             <td>
@@ -125,7 +152,7 @@ note that .pdb files will not be created for every protein on the input list, on
                   SWISS INDEX table count {{index_count}}
                 </div>
                 <div>
-                  process ongoing: {{ parsing_on ? 'Yes' : 'No' }}
+                  Process {{ parsing_on ? 'On' : 'Off' }}
                   <button id="hbonds-bridges-stop" class="btn btn-sm btn-outline-secondary">Stop</button>
                 </div>
             </td>
@@ -136,15 +163,12 @@ note that .pdb files will not be created for every protein on the input list, on
                     aria-valuemin="0"
                     aria-valuemax="100">0%</div>
                 </div>
-              <button id="hbonds-bridges-start" class="hbonds-bridges-start btn btn-sm btn-outline-secondary">Get BONDs and SaltBridges</button>
-              <button id="hbonds-bridges-stop" class="hbonds-bridges-stop btn btn-sm btn-outline-secondary">Stop</button>
-              <span id="hbonds-process-span">
               <div>
                 Process <span id="hbonds-process-on">{{ hbonds_on ? 'On' : 'Off' }}</span>
               </div>
-              <div>
-                <span id="hbonds-process-count">{{ hbonds_on ? hbonds_progress : '' }}</span>
-              </div>
+              <button id="hbonds-bridges-start" class="hbonds-bridges-start btn btn-sm btn-outline-secondary">Calculate using .pdb</button>
+              <button id="hbonds-bridges-stop" class="hbonds-bridges-stop btn btn-sm btn-outline-secondary">Stop</button>
+              <span id="hbonds-process-span">
             </td>
             <td>
                 <div id="fasta-progress" class="progress fade">
@@ -153,13 +177,13 @@ note that .pdb files will not be created for every protein on the input list, on
                     aria-valuemin="0"
                     aria-valuemax="100">0%</div>
                 </div>
-              <button id="models-start" class="btn btn-sm btn-outline-secondary">Request models ({{model_requests_today}} today)</button>
+                <div>
+                  Fasta Parsing Process <span id="models-process-on">{{ fasta_on ? 'On' : 'Off' }}</span>
+                </div>
+              <button id="models-start" class="btn btn-sm btn-outline-secondary">Calculate using .fasta ({{model_requests_today}} today)</button>
               <button id="models-stop" class="btn btn-sm btn-outline-secondary">Stop</button>
               <div>
-                Process <span id="models-process-on">{{ models_on ? 'On' : 'Off' }}</span>
-              </div>
-              <div>
-                <span id="models-process-count">{{ models_on ? models_progress : '' }}</span>
+                Request Models Process <span id="models-process-on">{{ models_on ? 'On' : 'Off' }}</span>
               </div>
                 <div id="swiss-progress" class="progress fade">
                   <div class="progress-bar bg-info" role="progressbar" style="width: 0%;"
@@ -167,6 +191,9 @@ note that .pdb files will not be created for every protein on the input list, on
                     aria-valuemin="0"
                     aria-valuemax="100">0%</div>
                 </div>
+              <div>
+                Collect Process <span id="collect-process-on">{{ collect_on ? 'On' : 'Off' }}</span>
+              </div>
             </td>
             <td>
                 <div id="amino-progress" class="progress fade">
@@ -176,20 +203,20 @@ note that .pdb files will not be created for every protein on the input list, on
                     aria-valuemax="100">0%</div>
                 </div>
                 <div>
-                  Amino Acid table count <span id="amino-table-count">{{amino_index_count}}</span> 
+                  AMINO ACID table count <span id="amino-table-count">{{amino_index_count}}</span> 
                 </div>
                 <div>
-                  Process ongoing: <span id="amino-process-on">{{ amino_parsing_on ? 'Yes' : 'No' }}</span>
+                  Process <span id="amino-process-on">{{ amino_parsing_on ? 'On' : 'Off' }}</span>
                   <button id="amino-process-stop" class="btn btn-sm btn-outline-secondary">Stop</button>
                 </div>
-              <a href="{{path('protein_core_aminotable', {'pageslug': pageslug})}}">Table of aminoacids for page</a>
+              <a  target="_blank" href="{{path('protein_core_aminotable', {'pageslug': pageslug})}}">Amino Acids Results Table</a>
             </td>
           </tr>
         </table>
       </div>
 
       <div class="ml-5 mr-5">
-        <h4>Proteins</h4>
+        <h4>Results Table</h4>
         <table class="table" id="proteins-table">
           <thead>
             <tr>
@@ -197,11 +224,11 @@ note that .pdb files will not be created for every protein on the input list, on
               <th>Name</th>
               <th>Gene</th>
               <th>Species</th>
-              <th>Len</th>
+              <th>Length</th>
               <th>Qmean</th>
-              <th>Qmean norm</th>
-              <th>Bonds</th>
-              <th>Bridges</th>
+              <!-- th>Qmean norm</th -->
+              <th>H-Bonds</th>
+              <th>Salt Bridges</th>
               <th>File name</th>
               <!-- th>Index Reference</th -->
             </tr>
@@ -214,8 +241,8 @@ note that .pdb files will not be created for every protein on the input list, on
               <td>{{ protein.gene }}</td>
               <td>{{ protein.species }}</td>
               <td>{{ protein.len }}</td>
-              <td>{{ protein.qmean }}</td>
-              <td>{{ protein.qmean_norm }}</td>
+              <td>{{ (protein.qmean)|number_format(2, '.', ',') }}</td>
+              <!-- td>{{ protein.qmean_norm }}</td -->
               <td>{{ protein.bonds }}</td>
               <td>{{ protein.bridges }}</td>
               <td>{{ protein.filename }}</td>

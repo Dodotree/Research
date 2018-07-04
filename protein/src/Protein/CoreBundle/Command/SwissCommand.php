@@ -73,6 +73,7 @@ class SwissCommand extends ContainerAwareCommand
             $output->writeln("$$$$$$$$$ $UniProt");
             if( !$this->checkAPIifModelExists($em, $UniProt, $pagedir, $output) ) {
                 $output->writeln("-----> request $UniProt");
+                file_put_contents("$pagedir/err", "Request $UniProt\n",  FILE_APPEND);
                 $this->requestModel($em, $prot_repo, $pagedir, $UniProt, $output);
             }
 
@@ -100,17 +101,17 @@ class SwissCommand extends ContainerAwareCommand
         $body = substr($response, $hlength);
 
         if ($httpCode != 200) {
-            file_put_contents("$pagedir/err", "No info file for $UniProt");
+            file_put_contents("$pagedir/err", "No info file for $UniProt\n",  FILE_APPEND);
             return false;
         }
 
         if (!$info = json_decode($body, true)) {
-            file_put_contents("$pagedir/err", "Bad JSON in info file for $UniProt");
+            file_put_contents("$pagedir/err", "Bad JSON in info file for $UniProt\n", FILE_APPEND);
             return false;
         }
 
         if (!isset($info['result']) or !isset($info['result']['structures']) or count($info['result']['structures']) == 0) {
-            file_put_contents("$pagedir/err", "No structures in info file for $UniProt");
+            file_put_contents("$pagedir/err", "No structures in info file for $UniProt\n", FILE_APPEND);
             return false;
         }
 
@@ -158,7 +159,7 @@ class SwissCommand extends ContainerAwareCommand
         $body = substr($response, $hlength);
 
         if ($httpCode != 200) {
-            file_put_contents("$pagedir/err", "No best pdb file for $UniProt");
+            file_put_contents("$pagedir/err", "No best pdb file for $UniProt\n", FILE_APPEND);
             return false;
         }
 
@@ -213,12 +214,12 @@ class SwissCommand extends ContainerAwareCommand
             ->getQuery()->getSingleScalarResult();
 
         if( $requests_today > 1995 ){
-            file_put_contents("$pagedir/err", "Too many requests today, try again tomorrow");
+            file_put_contents("$pagedir/err", "Too many requests today, try again tomorrow\n", FILE_APPEND);
             return false;
         }
 
         if( !$csrf_token = $this->setCookie_getCSRF( $pagedir, $UniProt ) ){
-            file_put_contents("$pagedir/err", "No csrf for request $UniProt");
+            file_put_contents("$pagedir/err", "No csrf for request $UniProt\n", FILE_APPEND);
             return false;
         }
 
@@ -239,11 +240,15 @@ class SwissCommand extends ContainerAwareCommand
         $target = $prot->getSequence();
 
         if(!$target) {
-            file_put_contents("$pagedir/err", "No sequence found for $UniProt");
+            file_put_contents("$pagedir/err", "No sequence found for $UniProt\n", FILE_APPEND);
             return false;
         }
         if(strpos($target,"X") !== false) {
-            file_put_contents("$pagedir/err", "Sequence coutains X (not allowed) $UniProt");
+            file_put_contents("$pagedir/err", "Sequence coutains X (not allowed) $UniProt\n", FILE_APPEND);
+            return false;
+        }
+        if(strlen($target) < 31) {
+            file_put_contents("$pagedir/err", "The target sequence must be longer than 30 residues. $UniProt\n", FILE_APPEND);
             return false;
         }
 
@@ -286,12 +291,12 @@ class SwissCommand extends ContainerAwareCommand
         curl_close ($ch);
 
         if ($httpCode != 200) {
-            file_put_contents("$pagedir/err", "Failed to post swiss request form for $UniProt");
+            file_put_contents("$pagedir/err", "Failed to post swiss request form for $UniProt\n", FILE_APPEND);
             return false;
         }
         if ($last_url == $uri) {
             file_put_contents("$pagedir/err_$UniProt", $result); 
-            file_put_contents("$pagedir/err", "Redirected to same page $UniProt");
+            file_put_contents("$pagedir/err", "Redirected to same page $UniProt\n", FILE_APPEND);
             return false;
         }
 
@@ -304,6 +309,7 @@ class SwissCommand extends ContainerAwareCommand
         $em->persist($mreq);
         $em->flush();
 
+        file_put_contents("$pagedir/err", "Request created $UniProt $last_url\n",  FILE_APPEND);
         # $output->writeln($result);
         # $output->writeln("**************".$last_url);
 
@@ -329,7 +335,7 @@ class SwissCommand extends ContainerAwareCommand
         $httpCode = curl_getinfo($handle, CURLINFO_HTTP_CODE);
 
         if ($httpCode != 200) {
-            file_put_contents("$pagedir/err", "No reply for csrf request");
+            file_put_contents("$pagedir/err", "No reply for csrf request\n", FILE_APPEND);
             return false;
         }
 
